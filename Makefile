@@ -37,7 +37,7 @@ WASM_SRCS := \
 
 # Emscripten build flags
 EMCC_FLAGS := -O2 \
-  --preload-file advent.dat \
+  --preload-file $(CURDIR)/advent/advent.dat@/advent.dat \
   -I./src/libf2c $(LIB_C)/libf2c.a \
   -sMODULARIZE=1 \
   -sEXPORT_NAME='createAdventModule' \
