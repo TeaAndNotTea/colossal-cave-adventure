@@ -159,6 +159,19 @@ export class AdventRenderer {
         }
         return fissProp === 1 ? '17+crystal+bridge' : null;
       }
+      case 23: {
+        const stage = this.bridge.getObjectProp(SPECIAL_OBJECTS.plant);
+        if (stage == null) {
+          return null;
+        }
+        if (stage >= 4) {
+          return '23+huge+plant';
+        }
+        if (stage >= 2) {
+          return '23+large+plant';
+        }
+        return '23';
+      }
       case 25: {
         const stage = this.bridge.getObjectProp(SPECIAL_OBJECTS.plant);
         if (stage == null) {
