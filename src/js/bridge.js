@@ -11,6 +11,7 @@ export class AdventBridge {
       spawnDwarfFn: null,
       spawnAllDwarvesFn: null,
       spawnPirateFn: null,
+      getPlayerDeadFn: null,
       getLocCondFn: null,
       getObjPropFn: null,
       getObjPlaceFn: null,
@@ -63,6 +64,18 @@ export class AdventBridge {
       return this.exports.getLocCondFn(locNum | 0);
     } catch (e) {
       console.warn('get_location_cond() failed:', e);
+      return null;
+    }
+  }
+
+  getPlayerDead() {
+    if (!this.exports.getPlayerDeadFn) {
+      return null;
+    }
+    try {
+      return this.exports.getPlayerDeadFn();
+    } catch (e) {
+      console.warn('get_player_dead() failed:', e);
       return null;
     }
   }
@@ -318,6 +331,12 @@ export class AdventBridge {
       }
 
       try {
+        this.exports.getPlayerDeadFn = ModuleInstance.cwrap('get_player_dead', 'number', []);
+      } catch (e) {
+        console.warn('Colossal Adventure: cwrap(get_player_dead) failed', e);
+      }
+
+      try {
         this.exports.getLocCondFn = ModuleInstance.cwrap('get_location_cond', 'number', ['number']);
       } catch (e) {
         console.warn('Colossal Adventure: cwrap(get_location_cond) failed', e);
@@ -343,6 +362,9 @@ export class AdventBridge {
     if (!this.exports.spawnPirateFn && typeof ModuleInstance._spawn_pirate === 'function') {
       this.exports.spawnPirateFn = () => ModuleInstance._spawn_pirate() | 0;
     }
+    if (!this.exports.getPlayerDeadFn && typeof ModuleInstance._get_player_dead === 'function') {
+      this.exports.getPlayerDeadFn = () => ModuleInstance._get_player_dead() | 0;
+    }
     if (!this.exports.getLocCondFn && typeof ModuleInstance._get_location_cond === 'function') {
       this.exports.getLocCondFn = (n) => ModuleInstance._get_location_cond(n | 0) | 0;
     }
@@ -357,6 +379,9 @@ export class AdventBridge {
     }
     if (!this.exports.spawnDwarfFn || !this.exports.spawnPirateFn) {
       console.warn('Colossal Adventure: spawn exports missing; :spawn disabled');
+    }
+    if (!this.exports.getPlayerDeadFn) {
+      console.warn('Colossal Adventure: no get_player_dead() export found; death image logic may be wrong');
     }
     if (!this.exports.getLocCondFn) {
       console.warn('Colossal Adventure: no get_location_cond() export found; dark-room image logic may be wrong');

@@ -17,6 +17,7 @@
 /* --- JS peek hook: current location ------------------------------- */
 /* Pointer to the f2c MAIN__-local "loc" variable */
 static integer *advent_loc_ptr = 0;
+static int advent_player_dead = 0;
 static integer *advent_oldloc_ptr = 0;
 static integer *advent_newloc_ptr = 0;
 static integer *advent_dflag_ptr = 0;
@@ -44,6 +45,11 @@ EMSCRIPTEN_KEEPALIVE int get_current_location(void) {
         return -1;
     }
     return (int)*advent_loc_ptr;
+}
+
+/* Exposed to JS: returns 1 if the player is in the death flow, else 0 */
+EMSCRIPTEN_KEEPALIVE int get_player_dead(void) {
+    return advent_player_dead ? 1 : 0;
 }
 
 /* Exposed to JS: force current room code (debug). Returns new loc (>0) on success,
@@ -1441,6 +1447,7 @@ L1106:
 	}
     }
     numdie = 0;
+    advent_player_dead = 0;
     placom_1.holdng = 0;
     dkill = 0;
     foobar = 0;
@@ -2518,10 +2525,12 @@ L50:
 /*  OLDLOC IS ZAPPED SO HE CAN'T JUST "RETREAT". */
 /*  THE EASIEST WAY TO GET KILLED IS TO FALL INTO A PIT IN PITCH DARKNESS. */
 L90:
+    advent_player_dead = 1;
     rspeak_(&c__23);
     oldlc2 = loc;
 /*  OKAY, HE'S DEAD.  LET'S GET ON WITH IT. */
 L99:
+    advent_player_dead = 1;
     if (closng) {
 	goto L95;
     }
@@ -2549,10 +2558,11 @@ L99:
 	drop_(&i__, &k);
 L98:
 	;
-    }
-    loc = 3;
-    oldloc = loc;
-    goto L2000;
+	}
+	loc = 3;
+	advent_player_dead = 0;
+	oldloc = loc;
+	goto L2000;
 /*  HE DIED DURING CLOSING TIME.  NO RESURRECTION.  TALLY UP A DEATH AND EXIT. */
 L95:
     rspeak_(&c__131);

@@ -332,6 +332,12 @@ export class AdventRenderer {
     }
 
     const loc = this.bridge.getCurrentLoc();
+    const isDead = this.bridge.getPlayerDead();
+    if (isDead === 1) {
+      this.setRoomImageByKey('you+dead');
+      this.clearItemLayer();
+      return;
+    }
     if (typeof loc !== 'number' || loc <= 0) {
       return;
     }
