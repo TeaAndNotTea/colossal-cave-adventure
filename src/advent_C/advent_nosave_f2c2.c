@@ -103,6 +103,7 @@ EMSCRIPTEN_KEEPALIVE int spawn_pirate(void) {
 /* --- JS peek hook: object properties and key object numbers ---------- */
 /* Pointer to the f2c MAIN__-local "prop" array (object states) */
 static integer *advent_prop_ptr = 0;
+static integer *advent_cond_ptr = 0;
 
 /* Pointers to the f2c global runtime location arrays (place/fixed) */
 static integer *advent_place_ptr = 0;
@@ -118,6 +119,17 @@ EMSCRIPTEN_KEEPALIVE int get_object_prop(int obj) {
         return -9999;
     }
     return (int)advent_prop_ptr[obj - 1];
+}
+
+/* Exposed to JS: return cond[loc-1] (room condition flags), or -9999 on error */
+EMSCRIPTEN_KEEPALIVE int get_location_cond(int loc) {
+    if (!advent_cond_ptr) {
+        return -9999;
+    }
+    if (loc <= 0 || loc > 150) {
+        return -9999;
+    }
+    return (int)advent_cond_ptr[loc - 1];
 }
 
 /* Exposed to JS: return place[obj-1] (object's current location), or -9999 on error */
@@ -785,6 +797,7 @@ static integer c__19 = 19;
 
 
     /* Additional peek pointers for JS overlays */
+    advent_cond_ptr = &cond[0];
     advent_prop_ptr = &prop[0];
     advent_place_ptr = &placom_1.place[0];
     advent_fixed_ptr = &placom_1.fixed[0];

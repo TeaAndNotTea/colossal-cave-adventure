@@ -11,6 +11,7 @@ export class AdventBridge {
       spawnDwarfFn: null,
       spawnAllDwarvesFn: null,
       spawnPirateFn: null,
+      getLocCondFn: null,
       getObjPropFn: null,
       getObjPlaceFn: null,
       getObjFixedFn: null,
@@ -50,6 +51,18 @@ export class AdventBridge {
       return this.exports.getObjPropFn(objNum | 0);
     } catch (e) {
       console.warn('get_object_prop() failed:', e);
+      return null;
+    }
+  }
+
+  getLocationCond(locNum) {
+    if (!this.exports.getLocCondFn) {
+      return null;
+    }
+    try {
+      return this.exports.getLocCondFn(locNum | 0);
+    } catch (e) {
+      console.warn('get_location_cond() failed:', e);
       return null;
     }
   }
@@ -303,6 +316,12 @@ export class AdventBridge {
       } catch (e) {
         console.warn('Colossal Adventure: cwrap(spawn_pirate) failed', e);
       }
+
+      try {
+        this.exports.getLocCondFn = ModuleInstance.cwrap('get_location_cond', 'number', ['number']);
+      } catch (e) {
+        console.warn('Colossal Adventure: cwrap(get_location_cond) failed', e);
+      }
     }
 
     if (!this.exports.getLocFn && typeof ModuleInstance._get_current_location === 'function') {
@@ -324,6 +343,9 @@ export class AdventBridge {
     if (!this.exports.spawnPirateFn && typeof ModuleInstance._spawn_pirate === 'function') {
       this.exports.spawnPirateFn = () => ModuleInstance._spawn_pirate() | 0;
     }
+    if (!this.exports.getLocCondFn && typeof ModuleInstance._get_location_cond === 'function') {
+      this.exports.getLocCondFn = (n) => ModuleInstance._get_location_cond(n | 0) | 0;
+    }
 
     if (!this.exports.getLocFn) {
       console.warn('Colossal Adventure: no get_current_location() export found');
@@ -335,6 +357,9 @@ export class AdventBridge {
     }
     if (!this.exports.spawnDwarfFn || !this.exports.spawnPirateFn) {
       console.warn('Colossal Adventure: spawn exports missing; :spawn disabled');
+    }
+    if (!this.exports.getLocCondFn) {
+      console.warn('Colossal Adventure: no get_location_cond() export found; dark-room image logic may be wrong');
     }
 
     return true;

@@ -1,6 +1,7 @@
 import { ITEM_DEFS, ITEM_SLOTS } from './config.js';
 
 const SPECIAL_OBJECTS = {
+  lamp: 2,
   grate: 3,
   fissur: 12,
   plant: 24,
@@ -336,6 +337,20 @@ export class AdventRenderer {
     }
 
     this.state.currentLocation = loc;
+
+    const lampProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.lamp);
+    const locCond = this.bridge.getLocationCond(loc);
+    const lampPlace = this.bridge.getObjectPlace(SPECIAL_OBJECTS.lamp);
+    const roomHasLight = typeof locCond === 'number' && locCond !== -9999 ? (locCond & 1) !== 0 : true;
+    const lampIsLightingHere =
+      lampProp === 1 && (lampPlace === loc || lampPlace === -1);
+
+    if (!roomHasLight && !lampIsLightingHere) {
+      this.setRoomImageByKey('dark');
+      this.renderRoomItems(loc);
+      return;
+    }
+
     const overrideKey = this.handleSpecialLocations(loc);
     if (overrideKey) {
       this.setRoomImageByKey(overrideKey);
