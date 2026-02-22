@@ -30,6 +30,7 @@ function ca_enqueue_scripts() {
         '1.0.0',
         true
     );
+    wp_script_add_data( 'colossal-adventure-play', 'type', 'module' );
 
     // Pass the asset base URL down to JS
     wp_localize_script(
@@ -41,6 +42,19 @@ function ca_enqueue_scripts() {
     );
 }
 add_action( 'wp_enqueue_scripts', 'ca_enqueue_scripts' );
+
+function ca_script_loader_tag( $tag, $handle, $src ) {
+    if ( 'colossal-adventure-play' !== $handle ) {
+        return $tag;
+    }
+
+    if ( false === strpos( $tag, 'type=' ) ) {
+        $tag = str_replace( '<script ', '<script type="module" ', $tag );
+    }
+
+    return $tag;
+}
+add_filter( 'script_loader_tag', 'ca_script_loader_tag', 10, 3 );
 
 function ca_advent_shortcode( $atts = array(), $content = '' ) {
     ob_start();

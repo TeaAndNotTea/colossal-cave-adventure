@@ -3,6 +3,8 @@
 /dist/
 /dist.old/
 
+.codex/state
+
 package.json
 package-lock.json
 .envrc
