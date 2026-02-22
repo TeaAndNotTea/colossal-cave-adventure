@@ -279,6 +279,47 @@ export class AdventRenderer {
 
         return null;
       }
+
+      // The maze of twisty little passages
+      case 42:
+      case 43:
+      case 44:
+      case 45:
+      case 49:
+      case 50:
+      case 51:
+      case 52:
+      case 53:
+      case 55:
+      case 80:
+      case 83:
+      case 84:
+      case 87:
+      case 107:
+      case 131:
+      case 138:
+      case 139:
+        return '42';
+
+      // These rooms are all dead ends, mapping to the same image
+      case 46:
+      case 47:
+      case 48:
+      case 54:
+      case 56:
+      case 58:
+      case 63:
+      case 81:
+      case 82:
+      case 85:
+      case 86:
+      case 114:
+        return '46';
+
+      // Except 140, which hosts the vending machine and has its own special variant
+      case 140:
+        return '140';
+
       default:
         return null;
     }

@@ -6,7 +6,10 @@ DONE -- beanstalk - has a shrivelled up stage (due to overwatering)
 need an additional image for the pit where the top of the beanstalk protrudes
 
 Need to add the vending machine (location TBD)
-Dark image. We need one for when the lamp is not lit and we're not near a source of light (loc 99, 100)
+
+DONE -- Dark image. We need one for when the lamp is not lit and we're not near a source of light (loc 99, 100)
+     -- need to add code to show it.
+
 loc 130: shell room. Clam can be picked up and dropped (but only here) so need an image without the Clam
 
 
