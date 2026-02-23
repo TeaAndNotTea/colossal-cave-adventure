@@ -17,7 +17,7 @@ DONE loc 103: shell room. Clam can be picked up and dropped (but only here) so n
 DONE Bird and cage are separate images. Need an item with bird in cage in case it is dropped
 DONE Right now dropping the cage, drops the bird in the cage, but we see a separate bird and cage. Maybe we can cheat and force them to the same location slot?
 DONE     - or just hide the cage and bird objects and display a bird+cage combined object?
-Bird has a disturbed state (flying), currently only have a chearful state
+DONE Bird has a disturbed state (flying), currently only have a chearful state
 
 Vase/Pillow interaction. When vase is place on pillow, need a combined item image
 DIfferent liquid texture for oil in bottle to differentiate from water (and empty)

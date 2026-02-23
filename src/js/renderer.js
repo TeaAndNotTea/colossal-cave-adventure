@@ -102,16 +102,31 @@ export class AdventRenderer {
     const cagePlace = this.bridge.getObjectPlace(4);
     const cageFixed = this.bridge.getObjectFixed(4);
     const rodPlace = this.bridge.getObjectPlace(5);
+    const pillowPlace = this.bridge.getObjectPlace(10);
+    const pillowFixed = this.bridge.getObjectFixed(10);
     const birdPlace = this.bridge.getObjectPlace(8);
     const birdFixed = this.bridge.getObjectFixed(8);
     const birdProp = this.bridge.getObjectProp(8);
+    const vasePlace = this.bridge.getObjectPlace(58);
+    const vaseFixed = this.bridge.getObjectFixed(58);
+    const vaseProp = this.bridge.getObjectProp(58);
     const cageHere = cagePlace === loc || cageFixed === loc;
+    const pillowHere = pillowPlace === loc || pillowFixed === loc;
     const birdHere = birdPlace === loc || birdFixed === loc;
+    const vaseHere = vasePlace === loc || vaseFixed === loc;
     const rodCarried = rodPlace === -1;
     const birdCaptured = birdProp != null && birdProp !== -9999 && birdProp !== 0;
     const birdDisturbed = this.bridge.getBirdDisturbed() === 1;
+    const vaseIntact = vaseProp === 0;
     const showDisturbedBird = birdHere && rodCarried && !birdCaptured && birdDisturbed;
     const showCageWithBird = cageHere && birdHere && birdCaptured;
+    const showBrokenVase = vaseProp === 2;
+    const showPillowWithVase = vaseHere && vaseIntact && (pillowHere || loc === 96);
+    const renderPillowVaseFromVase = showPillowWithVase && !pillowHere;
+
+    if (renderPillowVaseFromVase) {
+      used[0] = true;
+    }
 
     for (const def of ITEM_DEFS) {
       const obj = def.obj | 0;
@@ -119,6 +134,9 @@ export class AdventRenderer {
         continue;
       }
       if (showCageWithBird && obj === 8) {
+        continue;
+      }
+      if (showPillowWithVase && pillowHere && obj === 58) {
         continue;
       }
 
@@ -129,15 +147,22 @@ export class AdventRenderer {
         continue;
       }
 
-      const slotIndex = this.pickSlotIndex(def, loc, used);
+      const slotIndex =
+        renderPillowVaseFromVase && obj === 58 ? 0 : this.pickSlotIndex(def, loc, used);
       used[slotIndex] = true;
 
       const slot = ITEM_SLOTS[slotIndex] || ITEM_SLOTS[0];
       const sprite =
         showCageWithBird && obj === 4
           ? 'cage+bird.webp'
+          : showPillowWithVase && pillowHere && obj === 10
+            ? 'pillow+vase.webp'
+            : renderPillowVaseFromVase && obj === 58
+              ? 'pillow+vase.webp'
           : showDisturbedBird && obj === 8
             ? 'bird+disturbed.webp'
+            : showBrokenVase && obj === 58
+              ? 'vase+broken.webp'
             : def.sprite;
       const img = document.createElement('img');
       img.src = `${this.assetBaseUrl}items/${sprite}`;
