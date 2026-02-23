@@ -1621,9 +1621,14 @@ L74:
 /*  DWARVES CAN'T MEET THE BEAR.  ALSO MEANS DWARVES WON'T FOLLOW HIM INTO DEAD */
 /*  END IN MAZE, BUT C'EST LA VIE.  THEY'LL WAIT FOR HIM OUTSIDE THE DEAD END. */
 
-    /*  DRO: ADDED dwarf disable hook*/
+    /*  DRO: ADDED dwarf disable hook
+        Disable normal dwarves (1..5), but continue processing the pirate (6). */
     if (advent_disable_dwarves) {
-        goto L2000; /* bypass all dwarf activation/movement/attacks */
+        for (i__ = 1; i__ <= 5; ++i__) {
+            dseen[i__ - 1] = FALSE_;
+            dloc[i__ - 1] = 0;
+            odloc[i__ - 1] = 0;
+        }
     }
 
     if (loc == 0 || cond[loc - 1] == 2 || cond[newloc - 1] / pow_ii(&c__2, &
@@ -1641,6 +1646,10 @@ L74:
 /*  ANY OF THE SURVIVORS IS AT LOC, REPLACE HIM WITH THE ALTERNATE. */
 L6000:
     if (dflag != 1) {
+	goto L6010;
+    }
+    if (advent_disable_dwarves) {
+	dflag = 2;
 	goto L6010;
     }
     if (loc < 15 || ran_(&c__100) < c__95) {

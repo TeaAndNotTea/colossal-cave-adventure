@@ -232,7 +232,7 @@ export class AdventRenderer {
 
     const used = Object.create(null);
 
-    for (let which = 1; which <= 5; which += 1) {
+    for (let which = 1; which <= 6; which += 1) {
       const dloc = this.bridge.getDwarfLocation(which);
       if (typeof dloc !== 'number' || dloc <= 0 || dloc !== loc) {
         continue;
@@ -243,13 +243,13 @@ export class AdventRenderer {
       const slot = ACTOR_SLOTS[slotIndex] || ACTOR_SLOTS[0];
 
       const img = document.createElement('img');
-      img.src = `${this.assetBaseUrl}items/dwarf.webp`;
-      img.alt = `Dwarf ${String(which)}`;
+      img.src = `${this.assetBaseUrl}items/${which === 6 ? 'pirate.webp' : 'dwarf.webp'}`;
+      img.alt = which === 6 ? 'Pirate' : `Dwarf ${String(which)}`;
       img.style.position = 'absolute';
       img.style.left = `${String(slot.x)}%`;
       img.style.top = `${String(slot.y)}%`;
       img.style.transform = 'translate(-50%, -50%)';
-      img.style.width = '16%';
+      img.style.width = '24%';
       img.style.height = 'auto';
       img.style.imageRendering = 'auto';
       img.style.filter = 'drop-shadow(0 3px 4px rgba(0,0,0,0.8))';

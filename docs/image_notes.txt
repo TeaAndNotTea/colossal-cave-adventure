@@ -20,9 +20,9 @@ DONE     - or just hide the cage and bird objects and display a bird+cage combin
 DONE Bird has a disturbed state (flying), currently only have a chearful state
 
 DONE Vase/Pillow interaction. When vase is place on pillow, need a combined item image
-DIfferent liquid texture for oil in bottle to differentiate from water (and empty)
+Ignore. DIfferent liquid texture for oil in bottle to differentiate from water (and empty)
 
-Dwarf image needed, also dead dwarf (with axe in head?)
+DONE. Dwarf image needed, also dead dwarf (with axe in head?) No, dwarves vanish when killed.
 
 BUG: troll / bridge: When freeing the bear to scare the troll, the troll disappears but also the bridge shows the BROKEN
 state incorrectly.
@@ -31,8 +31,8 @@ BUG: dragon image is incorrect. Shows no dragon or rug, but does render collecta
 killing dragon shows it dead, with the collectable rug object (correct)
     - is this a location 120/121 issue? maybe it depends on direction.
 
-BUG: Disabling dwarves also disables dwarf (6) the pirate, which means he never steals a treasure, so we can never find the chest.
-NOTE: Don't forget about the spawn command to debug this.
+DONE. BUG: Disabling dwarves also disables dwarf (6) the pirate, which means he never steals a treasure, so we can never find the chest.
+        NOTE: Don't forget about the spawn command to debug this.
 
 Bug: loc 130 - bear room - chain item appears on floor with bear locked up. Need to it to be surpressed until the chain is picked up first TIME
 
