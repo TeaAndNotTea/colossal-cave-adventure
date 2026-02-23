@@ -18,6 +18,7 @@
 /* Pointer to the f2c MAIN__-local "loc" variable */
 static integer *advent_loc_ptr = 0;
 static int advent_player_dead = 0;
+static int advent_bird_disturbed = 0;
 static integer *advent_oldloc_ptr = 0;
 static integer *advent_newloc_ptr = 0;
 static integer *advent_dflag_ptr = 0;
@@ -50,6 +51,11 @@ EMSCRIPTEN_KEEPALIVE int get_current_location(void) {
 /* Exposed to JS: returns 1 if the player is in the death flow, else 0 */
 EMSCRIPTEN_KEEPALIVE int get_player_dead(void) {
     return advent_player_dead ? 1 : 0;
+}
+
+/* Exposed to JS: returns 1 once the bird has been frightened by a rod-assisted get attempt */
+EMSCRIPTEN_KEEPALIVE int get_bird_disturbed(void) {
+    return advent_bird_disturbed ? 1 : 0;
 }
 
 /* Exposed to JS: force current room code (debug). Returns new loc (>0) on success,
@@ -1448,6 +1454,7 @@ L1106:
     }
     numdie = 0;
     advent_player_dead = 0;
+    advent_bird_disturbed = 0;
     placom_1.holdng = 0;
     dkill = 0;
     foobar = 0;
@@ -2656,6 +2663,7 @@ L9016:
     if (! (placom_1.place[rod - 1] == -1)) {
 	goto L9013;
     }
+    advent_bird_disturbed = 1;
     rspeak_(&c__26);
     goto L2012;
 L9013:

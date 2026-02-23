@@ -101,12 +101,16 @@ export class AdventRenderer {
     const used = Object.create(null);
     const cagePlace = this.bridge.getObjectPlace(4);
     const cageFixed = this.bridge.getObjectFixed(4);
+    const rodPlace = this.bridge.getObjectPlace(5);
     const birdPlace = this.bridge.getObjectPlace(8);
     const birdFixed = this.bridge.getObjectFixed(8);
     const birdProp = this.bridge.getObjectProp(8);
     const cageHere = cagePlace === loc || cageFixed === loc;
     const birdHere = birdPlace === loc || birdFixed === loc;
+    const rodCarried = rodPlace === -1;
     const birdCaptured = birdProp != null && birdProp !== -9999 && birdProp !== 0;
+    const birdDisturbed = this.bridge.getBirdDisturbed() === 1;
+    const showDisturbedBird = birdHere && rodCarried && !birdCaptured && birdDisturbed;
     const showCageWithBird = cageHere && birdHere && birdCaptured;
 
     for (const def of ITEM_DEFS) {
@@ -129,7 +133,12 @@ export class AdventRenderer {
       used[slotIndex] = true;
 
       const slot = ITEM_SLOTS[slotIndex] || ITEM_SLOTS[0];
-      const sprite = showCageWithBird && obj === 4 ? 'cage+bird.webp' : def.sprite;
+      const sprite =
+        showCageWithBird && obj === 4
+          ? 'cage+bird.webp'
+          : showDisturbedBird && obj === 8
+            ? 'bird+disturbed.webp'
+            : def.sprite;
       const img = document.createElement('img');
       img.src = `${this.assetBaseUrl}items/${sprite}`;
       img.alt = sprite.replace(/\.webp$/i, '');

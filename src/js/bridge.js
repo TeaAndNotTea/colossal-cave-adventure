@@ -12,6 +12,7 @@ export class AdventBridge {
       spawnAllDwarvesFn: null,
       spawnPirateFn: null,
       getPlayerDeadFn: null,
+      getBirdDisturbedFn: null,
       getLocCondFn: null,
       getObjPropFn: null,
       getObjPlaceFn: null,
@@ -76,6 +77,18 @@ export class AdventBridge {
       return this.exports.getPlayerDeadFn();
     } catch (e) {
       console.warn('get_player_dead() failed:', e);
+      return null;
+    }
+  }
+
+  getBirdDisturbed() {
+    if (!this.exports.getBirdDisturbedFn) {
+      return null;
+    }
+    try {
+      return this.exports.getBirdDisturbedFn();
+    } catch (e) {
+      console.warn('get_bird_disturbed() failed:', e);
       return null;
     }
   }
@@ -337,6 +350,12 @@ export class AdventBridge {
       }
 
       try {
+        this.exports.getBirdDisturbedFn = ModuleInstance.cwrap('get_bird_disturbed', 'number', []);
+      } catch (e) {
+        console.warn('Colossal Adventure: cwrap(get_bird_disturbed) failed', e);
+      }
+
+      try {
         this.exports.getLocCondFn = ModuleInstance.cwrap('get_location_cond', 'number', ['number']);
       } catch (e) {
         console.warn('Colossal Adventure: cwrap(get_location_cond) failed', e);
@@ -365,6 +384,9 @@ export class AdventBridge {
     if (!this.exports.getPlayerDeadFn && typeof ModuleInstance._get_player_dead === 'function') {
       this.exports.getPlayerDeadFn = () => ModuleInstance._get_player_dead() | 0;
     }
+    if (!this.exports.getBirdDisturbedFn && typeof ModuleInstance._get_bird_disturbed === 'function') {
+      this.exports.getBirdDisturbedFn = () => ModuleInstance._get_bird_disturbed() | 0;
+    }
     if (!this.exports.getLocCondFn && typeof ModuleInstance._get_location_cond === 'function') {
       this.exports.getLocCondFn = (n) => ModuleInstance._get_location_cond(n | 0) | 0;
     }
@@ -382,6 +404,9 @@ export class AdventBridge {
     }
     if (!this.exports.getPlayerDeadFn) {
       console.warn('Colossal Adventure: no get_player_dead() export found; death image logic may be wrong');
+    }
+    if (!this.exports.getBirdDisturbedFn) {
+      console.warn('Colossal Adventure: no get_bird_disturbed() export found; bird disturbed image logic may be wrong');
     }
     if (!this.exports.getLocCondFn) {
       console.warn('Colossal Adventure: no get_location_cond() export found; dark-room image logic may be wrong');
