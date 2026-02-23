@@ -107,6 +107,7 @@ export class AdventRenderer {
     const birdPlace = this.bridge.getObjectPlace(8);
     const birdFixed = this.bridge.getObjectFixed(8);
     const birdProp = this.bridge.getObjectProp(8);
+    const bottleProp = this.bridge.getObjectProp(20);
     const vasePlace = this.bridge.getObjectPlace(58);
     const vaseFixed = this.bridge.getObjectFixed(58);
     const vaseProp = this.bridge.getObjectProp(58);
@@ -120,6 +121,7 @@ export class AdventRenderer {
     const vaseIntact = vaseProp === 0;
     const showDisturbedBird = birdHere && rodCarried && !birdCaptured && birdDisturbed;
     const showCageWithBird = cageHere && birdHere && birdCaptured;
+    const showEmptyBottle = bottleProp === 1;
     const showBrokenVase = vaseProp === 2;
     const showPillowWithVase = vaseHere && vaseIntact && (pillowHere || loc === 96);
     const renderPillowVaseFromVase = showPillowWithVase && !pillowHere;
@@ -159,8 +161,10 @@ export class AdventRenderer {
             ? 'pillow+vase.webp'
             : renderPillowVaseFromVase && obj === 58
               ? 'pillow+vase.webp'
-          : showDisturbedBird && obj === 8
-            ? 'bird+disturbed.webp'
+            : showDisturbedBird && obj === 8
+              ? 'bird+disturbed.webp'
+            : showEmptyBottle && obj === 20
+              ? 'bottle+empty.webp'
             : showBrokenVase && obj === 58
               ? 'vase+broken.webp'
             : def.sprite;
