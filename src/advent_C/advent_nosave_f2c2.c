@@ -110,6 +110,26 @@ EMSCRIPTEN_KEEPALIVE int spawn_pirate(void) {
     return spawn_dwarf(6);
 }
 
+/* Exposed to JS: current dwarf system state (see dflag), or -9999 if unavailable */
+EMSCRIPTEN_KEEPALIVE int get_dwarf_flag(void) {
+    if (!advent_dflag_ptr) {
+        return -9999;
+    }
+    return (int)*advent_dflag_ptr;
+}
+
+/* Exposed to JS: current dloc[which-1] for dwarves 1..5 and pirate 6.
+   Returns <=0 if dead/inactive, or -9999 on error. */
+EMSCRIPTEN_KEEPALIVE int get_dwarf_location(int which) {
+    if (!advent_dloc_ptr) {
+        return -9999;
+    }
+    if (which < 1 || which > 6) {
+        return -9999;
+    }
+    return (int)advent_dloc_ptr[which - 1];
+}
+
 
 
 /* --- JS peek hook: object properties and key object numbers ---------- */

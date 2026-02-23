@@ -5,6 +5,7 @@ export class AdventUI {
     this.imagePanelEl = null;
     this.imageEl = null;
     this.itemLayerEl = null;
+    this.actorLayerEl = null;
     this.consoleEl = null;
     this.formEl = null;
     this.inputEl = null;
@@ -25,7 +26,8 @@ export class AdventUI {
 <div id="advent-image-panel" style="width:100%;max-width:640px;margin:0 auto 0.5rem auto;border:1px solid #444;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;">
   <div id="advent-image-wrap" style="position:relative;width:100%;">
     <img id="advent-room-image" src="" alt="Adventure location" style="max-width:100%;height:auto;display:block;" />
-    <div id="advent-item-layer" style="position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;"></div>
+    <div id="advent-item-layer" style="position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:1;"></div>
+    <div id="advent-actor-layer" style="position:absolute;left:0;top:0;right:0;bottom:0;pointer-events:none;z-index:2;"></div>
   </div>
 </div>
 
@@ -51,6 +53,7 @@ export class AdventUI {
     this.imagePanelEl = this.root.querySelector('#advent-image-panel');
     this.imageEl = this.root.querySelector('#advent-room-image');
     this.itemLayerEl = this.root.querySelector('#advent-item-layer');
+    this.actorLayerEl = this.root.querySelector('#advent-actor-layer');
     this.consoleEl = this.root.querySelector('#advent-console');
     this.formEl = this.root.querySelector('#advent-form');
     this.inputEl = this.root.querySelector('#advent-input');

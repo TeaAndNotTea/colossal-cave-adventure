@@ -11,6 +11,8 @@ export class AdventBridge {
       spawnDwarfFn: null,
       spawnAllDwarvesFn: null,
       spawnPirateFn: null,
+      getDwarfFlagFn: null,
+      getDwarfLocationFn: null,
       getPlayerDeadFn: null,
       getBirdDisturbedFn: null,
       getLocCondFn: null,
@@ -77,6 +79,30 @@ export class AdventBridge {
       return this.exports.getPlayerDeadFn();
     } catch (e) {
       console.warn('get_player_dead() failed:', e);
+      return null;
+    }
+  }
+
+  getDwarfFlag() {
+    if (!this.exports.getDwarfFlagFn) {
+      return null;
+    }
+    try {
+      return this.exports.getDwarfFlagFn();
+    } catch (e) {
+      console.warn('get_dwarf_flag() failed:', e);
+      return null;
+    }
+  }
+
+  getDwarfLocation(which) {
+    if (!this.exports.getDwarfLocationFn) {
+      return null;
+    }
+    try {
+      return this.exports.getDwarfLocationFn(which | 0);
+    } catch (e) {
+      console.warn('get_dwarf_location() failed:', e);
       return null;
     }
   }
@@ -344,6 +370,18 @@ export class AdventBridge {
       }
 
       try {
+        this.exports.getDwarfFlagFn = ModuleInstance.cwrap('get_dwarf_flag', 'number', []);
+      } catch (e) {
+        console.warn('Colossal Adventure: cwrap(get_dwarf_flag) failed', e);
+      }
+
+      try {
+        this.exports.getDwarfLocationFn = ModuleInstance.cwrap('get_dwarf_location', 'number', ['number']);
+      } catch (e) {
+        console.warn('Colossal Adventure: cwrap(get_dwarf_location) failed', e);
+      }
+
+      try {
         this.exports.getPlayerDeadFn = ModuleInstance.cwrap('get_player_dead', 'number', []);
       } catch (e) {
         console.warn('Colossal Adventure: cwrap(get_player_dead) failed', e);
@@ -381,6 +419,12 @@ export class AdventBridge {
     if (!this.exports.spawnPirateFn && typeof ModuleInstance._spawn_pirate === 'function') {
       this.exports.spawnPirateFn = () => ModuleInstance._spawn_pirate() | 0;
     }
+    if (!this.exports.getDwarfFlagFn && typeof ModuleInstance._get_dwarf_flag === 'function') {
+      this.exports.getDwarfFlagFn = () => ModuleInstance._get_dwarf_flag() | 0;
+    }
+    if (!this.exports.getDwarfLocationFn && typeof ModuleInstance._get_dwarf_location === 'function') {
+      this.exports.getDwarfLocationFn = (n) => ModuleInstance._get_dwarf_location(n | 0) | 0;
+    }
     if (!this.exports.getPlayerDeadFn && typeof ModuleInstance._get_player_dead === 'function') {
       this.exports.getPlayerDeadFn = () => ModuleInstance._get_player_dead() | 0;
     }
@@ -401,6 +445,9 @@ export class AdventBridge {
     }
     if (!this.exports.spawnDwarfFn || !this.exports.spawnPirateFn) {
       console.warn('Colossal Adventure: spawn exports missing; :spawn disabled');
+    }
+    if (!this.exports.getDwarfFlagFn || !this.exports.getDwarfLocationFn) {
+      console.warn('Colossal Adventure: dwarf location exports missing; dwarf image overlay may be wrong');
     }
     if (!this.exports.getPlayerDeadFn) {
       console.warn('Colossal Adventure: no get_player_dead() export found; death image logic may be wrong');

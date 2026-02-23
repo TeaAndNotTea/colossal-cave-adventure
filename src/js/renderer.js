@@ -1,5 +1,13 @@
 import { ITEM_DEFS, ITEM_SLOTS } from './config.js';
 
+const ACTOR_SLOTS = [
+  { x: 10, y: 82 },
+  { x: 30, y: 82 },
+  { x: 50, y: 82 },
+  { x: 70, y: 82 },
+  { x: 90, y: 82 },
+];
+
 const SPECIAL_OBJECTS = {
   lamp: 2,
   grate: 3,
@@ -92,6 +100,32 @@ export class AdventRenderer {
     }
   }
 
+  clearActorLayer() {
+    if (!this.ui.actorLayerEl) {
+      return;
+    }
+    while (this.ui.actorLayerEl.firstChild) {
+      this.ui.actorLayerEl.removeChild(this.ui.actorLayerEl.firstChild);
+    }
+  }
+
+  pickActorSlotIndex(seed, loc, alreadyUsed) {
+    const n = ACTOR_SLOTS.length;
+    if (n <= 0) {
+      return 0;
+    }
+
+    const h = this.hashSlot(seed | 0, loc | 0) % n;
+    for (let i = 0; i < n; i += 1) {
+      const idx = (h + i) % n;
+      if (!alreadyUsed[idx]) {
+        return idx;
+      }
+    }
+
+    return h;
+  }
+
   renderRoomItems(loc) {
     if (!this.ui.itemLayerEl || !this.bridge || !this.bridge.hasObjectLocationAccess()) {
       return;
@@ -181,6 +215,46 @@ export class AdventRenderer {
       img.style.filter = 'drop-shadow(0 2px 3px rgba(0,0,0,0.6))';
 
       this.ui.itemLayerEl.appendChild(img);
+    }
+  }
+
+  renderDwarves(loc) {
+    if (!this.ui.actorLayerEl || !this.bridge) {
+      return;
+    }
+
+    this.clearActorLayer();
+
+    const dflag = this.bridge.getDwarfFlag();
+    if (typeof dflag !== 'number' || dflag < 2) {
+      return;
+    }
+
+    const used = Object.create(null);
+
+    for (let which = 1; which <= 5; which += 1) {
+      const dloc = this.bridge.getDwarfLocation(which);
+      if (typeof dloc !== 'number' || dloc <= 0 || dloc !== loc) {
+        continue;
+      }
+
+      const slotIndex = this.pickActorSlotIndex(1000 + which, loc, used);
+      used[slotIndex] = true;
+      const slot = ACTOR_SLOTS[slotIndex] || ACTOR_SLOTS[0];
+
+      const img = document.createElement('img');
+      img.src = `${this.assetBaseUrl}items/dwarf.webp`;
+      img.alt = `Dwarf ${String(which)}`;
+      img.style.position = 'absolute';
+      img.style.left = `${String(slot.x)}%`;
+      img.style.top = `${String(slot.y)}%`;
+      img.style.transform = 'translate(-50%, -50%)';
+      img.style.width = '16%';
+      img.style.height = 'auto';
+      img.style.imageRendering = 'auto';
+      img.style.filter = 'drop-shadow(0 3px 4px rgba(0,0,0,0.8))';
+
+      this.ui.actorLayerEl.appendChild(img);
     }
   }
 
@@ -379,6 +453,7 @@ export class AdventRenderer {
 
   refreshRoomVisuals() {
     if (!this.state.moduleRef || !this.bridge) {
+      this.clearActorLayer();
       return;
     }
 
@@ -387,9 +462,11 @@ export class AdventRenderer {
     if (isDead === 1) {
       this.setRoomImageByKey('you+dead');
       this.clearItemLayer();
+      this.clearActorLayer();
       return;
     }
     if (typeof loc !== 'number' || loc <= 0) {
+      this.clearActorLayer();
       return;
     }
 
@@ -405,6 +482,7 @@ export class AdventRenderer {
     if (!roomHasLight && !lampIsLightingHere) {
       this.setRoomImageByKey('dark');
       this.renderRoomItems(loc);
+      this.renderDwarves(loc);
       return;
     }
 
@@ -415,5 +493,6 @@ export class AdventRenderer {
       this.updateRoomImage(loc);
     }
     this.renderRoomItems(loc);
+    this.renderDwarves(loc);
   }
 }
