@@ -13,6 +13,7 @@ export const ITEM_DEFS = [
   { obj: 5, sprite: 'rod.webp', startLoc: 11, startSlot: 3 },
   { obj: 8, sprite: 'bird.webp', startLoc: 13, startSlot: 4 },
   { obj: 10, sprite: 'pillow.webp', startLoc: 96, startSlot: 0 },
+  { obj: 14, sprite: 'clam.webp', startLoc: 103, startSlot: 0 },
   { obj: 16, sprite: 'magazine.webp', startLoc: 106, startSlot: 1 },
   { obj: 19, sprite: 'food.webp', startLoc: 3, startSlot: 2 },
   { obj: 20, sprite: 'bottle+full.webp', startLoc: 3, startSlot: 3 },

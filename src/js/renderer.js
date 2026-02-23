@@ -99,10 +99,22 @@ export class AdventRenderer {
 
     this.clearItemLayer();
     const used = Object.create(null);
+    const cagePlace = this.bridge.getObjectPlace(4);
+    const cageFixed = this.bridge.getObjectFixed(4);
+    const birdPlace = this.bridge.getObjectPlace(8);
+    const birdFixed = this.bridge.getObjectFixed(8);
+    const birdProp = this.bridge.getObjectProp(8);
+    const cageHere = cagePlace === loc || cageFixed === loc;
+    const birdHere = birdPlace === loc || birdFixed === loc;
+    const birdCaptured = birdProp != null && birdProp !== -9999 && birdProp !== 0;
+    const showCageWithBird = cageHere && birdHere && birdCaptured;
 
     for (const def of ITEM_DEFS) {
       const obj = def.obj | 0;
       if (obj <= 0) {
+        continue;
+      }
+      if (showCageWithBird && obj === 8) {
         continue;
       }
 
@@ -117,9 +129,10 @@ export class AdventRenderer {
       used[slotIndex] = true;
 
       const slot = ITEM_SLOTS[slotIndex] || ITEM_SLOTS[0];
+      const sprite = showCageWithBird && obj === 4 ? 'cage+bird.webp' : def.sprite;
       const img = document.createElement('img');
-      img.src = `${this.assetBaseUrl}items/${def.sprite}`;
-      img.alt = def.sprite.replace(/\.webp$/i, '');
+      img.src = `${this.assetBaseUrl}items/${sprite}`;
+      img.alt = sprite.replace(/\.webp$/i, '');
       img.style.position = 'absolute';
       img.style.left = `${String(slot.x)}%`;
       img.style.top = `${String(slot.y)}%`;
@@ -207,13 +220,13 @@ export class AdventRenderer {
         }
         return doorProp === 0 ? '94+closed+door' : '94+open+door';
       }
-      case 103: {
-        const clamProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.clam);
-        if (clamProp == null) {
-          return null;
-        }
-        return clamProp === 0 ? '103+clam+closed' : '103+clam+open';
-      }
+      //case 103: {
+      // const clamProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.clam);
+      //  if (clamProp == null) {
+      //    return null;
+      //  }
+      //  return clamProp === 0 ? '103+clam+closed' : '103+clam+open';
+      //}
       case 117: {
         const trollProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.troll);
         if (trollProp == null) {

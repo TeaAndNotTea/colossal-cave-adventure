@@ -6,15 +6,17 @@ DONE -- beanstalk - has a shrivelled up stage (due to overwatering)
 DONE -- need an additional image for the pit where the top of the beanstalk protrudes
 DONE -- Need to add the vending machine (location TBD)
 DONE -- Dark image. We need one for when the lamp is not lit and we're not near a source of light (loc 99, 100)
-     -- need to add code to show it.
+DONE    -- need to add code to show it.
 
-loc 130: shell room. Clam can be picked up and dropped (but only here) so need an image without the Clam
-
+DONE loc 103: shell room. Clam can be picked up and dropped (but only here) so need an image without the Clam
+        DONE - got the image  
+        DONE. BUG: clam needs to be a luggable item as it can be picked up and dropped ELSEWHERE
+        DONE. BUG: Remove clam image from shell room and make clam an item   -- Need a clam item image
 
 -Items-
-Bird and cage are separate images. Need an item with bird in cage in case it is dropped
-Right now dropping the cage, drops the bird as a separate item. Maybe we can cheat and force them to the same location slot?
-    - or just hide the cage and bird objects and display a bird+cage combined object?
+DONE Bird and cage are separate images. Need an item with bird in cage in case it is dropped
+DONE Right now dropping the cage, drops the bird in the cage, but we see a separate bird and cage. Maybe we can cheat and force them to the same location slot?
+DONE     - or just hide the cage and bird objects and display a bird+cage combined object?
 Bird has a disturbed state (flying), currently only have a chearful state
 
 Vase/Pillow interaction. When vase is place on pillow, need a combined item image
@@ -32,4 +34,5 @@ killing dragon shows it dead, with the collectable rug object (correct)
 BUG: Disabling dwarves also disables dwarf (6) the pirate, which means he never steals a treasure, so we can never find the chest.
 NOTE: Don't forget about the spawn command to debug this.
 
+Bug: loc 130 - bear room - chain item appears on floor with bear locked up. Need to it to be surpressed until the chain is picked up first TIME
 
