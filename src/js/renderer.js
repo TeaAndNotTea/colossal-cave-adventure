@@ -239,36 +239,62 @@ export class AdventRenderer {
     this.clearActorLayer();
 
     const dflag = this.bridge.getDwarfFlag();
-    if (typeof dflag !== 'number' || dflag < 2) {
+    const used = Object.create(null);
+
+    if (typeof dflag === 'number' && dflag >= 2) {
+      for (let which = 1; which <= 6; which += 1) {
+        const dloc = this.bridge.getDwarfLocation(which);
+        if (typeof dloc !== 'number' || dloc <= 0 || dloc !== loc) {
+          continue;
+        }
+
+        const slotIndex = this.pickActorSlotIndex(1000 + which, loc, used);
+        used[slotIndex] = true;
+        const slot = ACTOR_SLOTS[slotIndex] || ACTOR_SLOTS[0];
+
+        const img = document.createElement('img');
+        img.src = `${this.assetBaseUrl}items/${which === 6 ? 'pirate.webp' : 'dwarf.webp'}`;
+        img.alt = which === 6 ? 'Pirate' : `Dwarf ${String(which)}`;
+        img.style.position = 'absolute';
+        img.style.left = `${String(slot.x)}%`;
+        img.style.top = `${String(slot.y)}%`;
+        img.style.transform = 'translate(-50%, -50%)';
+        img.style.width = '24%';
+        img.style.height = 'auto';
+        img.style.imageRendering = 'auto';
+        img.style.filter = 'drop-shadow(0 3px 4px rgba(0,0,0,0.8))';
+
+        this.ui.actorLayerEl.appendChild(img);
+      }
+    }
+
+    this.renderBearPeepingOverlay();
+  }
+
+  renderBearPeepingOverlay() {
+    if (!this.ui.actorLayerEl || !this.bridge || !this.bridge.hasObjectLocationAccess()) {
       return;
     }
 
-    const used = Object.create(null);
-
-    for (let which = 1; which <= 6; which += 1) {
-      const dloc = this.bridge.getDwarfLocation(which);
-      if (typeof dloc !== 'number' || dloc <= 0 || dloc !== loc) {
-        continue;
-      }
-
-      const slotIndex = this.pickActorSlotIndex(1000 + which, loc, used);
-      used[slotIndex] = true;
-      const slot = ACTOR_SLOTS[slotIndex] || ACTOR_SLOTS[0];
-
-      const img = document.createElement('img');
-      img.src = `${this.assetBaseUrl}items/${which === 6 ? 'pirate.webp' : 'dwarf.webp'}`;
-      img.alt = which === 6 ? 'Pirate' : `Dwarf ${String(which)}`;
-      img.style.position = 'absolute';
-      img.style.left = `${String(slot.x)}%`;
-      img.style.top = `${String(slot.y)}%`;
-      img.style.transform = 'translate(-50%, -50%)';
-      img.style.width = '24%';
-      img.style.height = 'auto';
-      img.style.imageRendering = 'auto';
-      img.style.filter = 'drop-shadow(0 3px 4px rgba(0,0,0,0.8))';
-
-      this.ui.actorLayerEl.appendChild(img);
+    const bearProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.bear);
+    const bearPlace = this.bridge.getObjectPlace(SPECIAL_OBJECTS.bear);
+    if (bearProp !== 2 || bearPlace !== -1) {
+      return;
     }
+
+    const img = document.createElement('img');
+    img.src = `${this.assetBaseUrl}items/bear+peeping.webp`;
+    img.alt = 'Bear peeping';
+    img.style.position = 'absolute';
+    img.style.right = '0';
+    img.style.bottom = '0';
+    img.style.width = '28%';
+    img.style.aspectRatio = '741 / 1003';
+    img.style.height = 'auto';
+    img.style.imageRendering = 'auto';
+    img.style.filter = 'drop-shadow(0 4px 6px rgba(0,0,0,0.8))';
+
+    this.ui.actorLayerEl.appendChild(img);
   }
 
   handleSpecialLocations(loc) {
