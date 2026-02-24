@@ -24,8 +24,10 @@ Ignore. DIfferent liquid texture for oil in bottle to differentiate from water (
 
 DONE. Dwarf image needed, also dead dwarf (with axe in head?) No, dwarves vanish when killed.
 
-BUG: troll / bridge: When freeing the bear to scare the troll, the troll disappears but also the bridge shows the BROKEN
+DONE. BUG: troll / bridge: When freeing the bear to scare the troll, the troll disappears but also the bridge shows the BROKEN
 state incorrectly.
+    Minor: broken bridge states never can be shown at either end, due to the death image taking over.
+    
 
 BUG: dragon image is incorrect. Shows no dragon or rug, but does render collectable rug object, which we need to hide
 killing dragon shows it dead, with the collectable rug object (correct)
@@ -35,4 +37,4 @@ DONE. BUG: Disabling dwarves also disables dwarf (6) the pirate, which means he 
         NOTE: Don't forget about the spawn command to debug this.
 
 Bug: loc 130 - bear room - chain item appears on floor with bear locked up. Need to it to be surpressed until the chain is picked up first TIME
-
+    image adjust: change 130 base image to remove RHS rear wall details and add in the rectangular lock HOLE

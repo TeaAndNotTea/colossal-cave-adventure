@@ -36,6 +36,7 @@ const integer fissurObjNum = 12;
 const integer clamObjNum = 14;
 const integer plantObjNum = 24;
 const integer dragonObjNum = 31;
+const integer chasmObjNum = 32;
 const integer trollObjNum = 33;
 const integer bearObjNum = 35;
 const integer chainObjNum = 64;
@@ -245,6 +246,12 @@ EMSCRIPTEN_KEEPALIVE int get_clam_prop(void) {
    (0 = normal/blocking, 1 = has been paid / stepped aside, 2 = gone with bridge) */
 EMSCRIPTEN_KEEPALIVE int get_troll_prop(void) {
     return get_object_prop(trollObjNum);
+}
+
+/* Exposed to JS: convenience accessor for the chasm/bridge prop value
+   (0 = bridge present, 1 = bridge wreckage visible at bottom) */
+EMSCRIPTEN_KEEPALIVE int get_chasm_prop(void) {
+    return get_object_prop(chasmObjNum);
 }
 
 /* Exposed to JS: convenience accessor for the dragon prop value

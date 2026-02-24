@@ -11,6 +11,7 @@ const ACTOR_SLOTS = [
 const SPECIAL_OBJECTS = {
   lamp: 2,
   grate: 3,
+  chasm: 32,
   fissur: 12,
   plant: 24,
   snake: 11,
@@ -341,19 +342,28 @@ export class AdventRenderer {
       //}
       case 117: {
         const trollProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.troll);
-        if (trollProp == null) {
+        const chasmProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.chasm);
+        if (trollProp == null || chasmProp == null) {
           return null;
         }
-        if (trollProp === 2) {
+        if (chasmProp === 1) {
           return '117+broken+bridge';
         }
-        if (trollProp === 1) {
-          return '117+bridge';
+        let trollHere = null;
+        if (this.bridge.hasPlaceAndFixedAccess()) {
+          const trollPlace = this.bridge.getObjectPlace(SPECIAL_OBJECTS.troll);
+          const trollFixed = this.bridge.getObjectFixed(SPECIAL_OBJECTS.troll);
+          if (trollPlace != null && trollFixed != null) {
+            trollHere = trollPlace === loc || trollFixed === loc;
+          }
         }
-        if (trollProp === 0) {
+        if (trollHere == null) {
+          trollHere = trollProp === 0;
+        }
+        if (trollHere) {
           return '117+bridge+troll';
         }
-        return null;
+        return '117+bridge';
       }
       case 120:
         return '120+dead+dragon';
@@ -361,19 +371,28 @@ export class AdventRenderer {
         return '121+live+dragon';
       case 122: {
         const trollProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.troll);
-        if (trollProp == null) {
+        const chasmProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.chasm);
+        if (trollProp == null || chasmProp == null) {
           return null;
         }
-        if (trollProp === 2) {
+        if (chasmProp === 1) {
           return '122+broken+bridge';
         }
-        if (trollProp === 1) {
-          return '122+bridge';
+        let trollHere = null;
+        if (this.bridge.hasPlaceAndFixedAccess()) {
+          const trollPlace = this.bridge.getObjectPlace(SPECIAL_OBJECTS.troll);
+          const trollFixed = this.bridge.getObjectFixed(SPECIAL_OBJECTS.troll);
+          if (trollPlace != null && trollFixed != null) {
+            trollHere = trollPlace === loc || trollFixed === loc;
+          }
         }
-        if (trollProp === 0) {
+        if (trollHere == null) {
+          trollHere = trollProp === 0;
+        }
+        if (trollHere) {
           return '122+bridge+troll';
         }
-        return null;
+        return '122+bridge';
       }
       case 130: {
         const bearProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.bear);
