@@ -144,6 +144,8 @@ export class AdventRenderer {
     const birdProp = this.bridge.getObjectProp(8);
     const bottleProp = this.bridge.getObjectProp(20);
     const dragonProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.dragon);
+    const bearProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.bear);
+    const chainProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.chain);
     const vasePlace = this.bridge.getObjectPlace(58);
     const vaseFixed = this.bridge.getObjectFixed(58);
     const vaseProp = this.bridge.getObjectProp(58);
@@ -179,6 +181,12 @@ export class AdventRenderer {
       }
       if (obj === 62 && dragonProp === 0 && (loc === 119 || loc === 121)) {
         continue;
+      }
+      if (obj === SPECIAL_OBJECTS.chain && loc === 130) {
+        const showLooseChainInBearRoom = bearProp === 2 && chainProp === 0;
+        if (!showLooseChainInBearRoom) {
+          continue;
+        }
       }
 
       const place = this.bridge.getObjectPlace(obj);
@@ -404,7 +412,8 @@ export class AdventRenderer {
       }
       case 130: {
         const bearProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.bear);
-        if (bearProp == null || !this.bridge.hasPlaceAndFixedAccess()) {
+        const chainProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.chain);
+        if (bearProp == null || chainProp == null || !this.bridge.hasPlaceAndFixedAccess()) {
           return null;
         }
 
@@ -424,10 +433,13 @@ export class AdventRenderer {
           if (bearProp === 0) {
             return '130+fierce+bear';
           }
+          if (chainProp === 0) {
+            return '130+bear+nochain';
+          }
           if (chainHere) {
             return '130+tame+bear';
           }
-          return '130+bear+nochain';
+          return null;
         }
 
         return null;
