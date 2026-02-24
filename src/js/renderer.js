@@ -143,6 +143,7 @@ export class AdventRenderer {
     const birdFixed = this.bridge.getObjectFixed(8);
     const birdProp = this.bridge.getObjectProp(8);
     const bottleProp = this.bridge.getObjectProp(20);
+    const dragonProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.dragon);
     const vasePlace = this.bridge.getObjectPlace(58);
     const vaseFixed = this.bridge.getObjectFixed(58);
     const vaseProp = this.bridge.getObjectProp(58);
@@ -174,6 +175,9 @@ export class AdventRenderer {
         continue;
       }
       if (showPillowWithVase && pillowHere && obj === 58) {
+        continue;
+      }
+      if (obj === 62 && dragonProp === 0 && (loc === 119 || loc === 121)) {
         continue;
       }
 
@@ -333,13 +337,6 @@ export class AdventRenderer {
         }
         return doorProp === 0 ? '94+closed+door' : '94+open+door';
       }
-      //case 103: {
-      // const clamProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.clam);
-      //  if (clamProp == null) {
-      //    return null;
-      //  }
-      //  return clamProp === 0 ? '103+clam+closed' : '103+clam+open';
-      //}
       case 117: {
         const trollProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.troll);
         const chasmProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.chasm);
@@ -365,10 +362,21 @@ export class AdventRenderer {
         }
         return '117+bridge';
       }
-      case 120:
-        return '120+dead+dragon';
-      case 121:
-        return '121+live+dragon';
+      case 119:
+      case 121: {
+        const dragonProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.dragon);
+        if (dragonProp == null) {
+          return null;
+        }
+        return dragonProp === 0 ? '121+live+dragon' : null;
+      }
+      case 120: {
+        const dragonProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.dragon);
+        if (dragonProp == null) {
+          return null;
+        }
+        return dragonProp === 2 ? '120+dead+dragon' : null;
+      }
       case 122: {
         const trollProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.troll);
         const chasmProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.chasm);
