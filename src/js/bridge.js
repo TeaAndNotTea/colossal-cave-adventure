@@ -1,9 +1,10 @@
 export class AdventBridge {
-  constructor({ ui, renderer, assetBaseUrl, state }) {
+  constructor({ ui, renderer, assetBaseUrl, state, debugEnabled = false }) {
     this.ui = ui;
     this.renderer = renderer;
     this.assetBaseUrl = assetBaseUrl;
     this.state = state;
+    this.debugEnabled = !!debugEnabled;
 
     this.exports = {
       getLocFn: null,
@@ -228,6 +229,10 @@ export class AdventBridge {
   }
 
   handleDebugCommand(value) {
+    if (!this.debugEnabled) {
+      return false;
+    }
+
     const mWarp = /^\s*:(?:warp|loc)\s+(\d+)\s*$/i.exec(value);
     if (mWarp) {
       this.ui.appendLine(`> ${value}`);
@@ -289,7 +294,7 @@ export class AdventBridge {
     const value = (this.ui.inputEl.value || '').replace(/\r?\n/g, '');
     this.ui.inputEl.value = '';
 
-    if (this.handleDebugCommand(value)) {
+    if (this.debugEnabled && this.handleDebugCommand(value)) {
       return;
     }
 
@@ -440,10 +445,10 @@ export class AdventBridge {
       return false;
     }
 
-    if (!this.exports.setLocFn) {
+    if (this.debugEnabled && !this.exports.setLocFn) {
       console.warn('Colossal Adventure: no set_current_location() export found; :warp disabled');
     }
-    if (!this.exports.spawnDwarfFn || !this.exports.spawnPirateFn) {
+    if (this.debugEnabled && (!this.exports.spawnDwarfFn || !this.exports.spawnPirateFn)) {
       console.warn('Colossal Adventure: spawn exports missing; :spawn disabled');
     }
     if (!this.exports.getDwarfFlagFn || !this.exports.getDwarfLocationFn) {

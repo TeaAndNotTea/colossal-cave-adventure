@@ -4,8 +4,35 @@ import { AdventRenderer } from './renderer.js';
 
 console.log('[ADVENT] play.js version: adding bear');
 
-const assetBaseUrl =
-  (window.ColossalAdventureConfig && ColossalAdventureConfig.assetBaseUrl) || '';
+const runtimeConfig = window.ColossalAdventureConfig || {};
+
+const parseConfigBool = (value, defaultValue = false) => {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return value !== 0;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) {
+      return true;
+    }
+    if (['0', 'false', 'no', 'off', ''].includes(normalized)) {
+      return false;
+    }
+  }
+
+  return defaultValue;
+};
+
+const assetBaseUrl = runtimeConfig.assetBaseUrl || '';
+const debugEnabled = parseConfigBool(runtimeConfig.debug, false);
+
+// Global debug flag so module behavior can be toggled from shortcode config.
+window.__adventDebugEnabled = debugEnabled;
 
 const installGlobalExitHandler = () => {
   if (window.__adventExitHandlerInstalled) {
@@ -61,7 +88,7 @@ const runGame = async (root) => {
   ui.restoreDwarfPreference();
 
   const renderer = new AdventRenderer({ ui, assetBaseUrl, state });
-  const bridge = new AdventBridge({ ui, renderer, assetBaseUrl, state });
+  const bridge = new AdventBridge({ ui, renderer, assetBaseUrl, state, debugEnabled });
   renderer.setBridge(bridge);
 
   const handleExit = (status, message) => {

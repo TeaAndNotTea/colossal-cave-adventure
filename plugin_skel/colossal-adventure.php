@@ -44,7 +44,24 @@ function ca_register_scripts() {
 }
 add_action( 'wp_enqueue_scripts', 'ca_register_scripts' );
 
-function ca_enqueue_shortcode_assets() {
+function ca_normalize_bool_shortcode_attr( $value, $default = false ) {
+    if ( is_bool( $value ) ) {
+        return $value;
+    }
+
+    if ( null === $value ) {
+        return (bool) $default;
+    }
+
+    $normalized = filter_var( $value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE );
+    if ( null === $normalized ) {
+        return (bool) $default;
+    }
+
+    return $normalized;
+}
+
+function ca_enqueue_shortcode_assets( $config = array() ) {
     static $did_enqueue = false;
 
     if ( $did_enqueue ) {
@@ -64,6 +81,7 @@ function ca_enqueue_shortcode_assets() {
         'ColossalAdventureConfig',
         array(
             'assetBaseUrl' => $asset_base,
+            'debug'        => ! empty( $config['debug'] ) ? 1 : 0,
         )
     );
 }
@@ -82,7 +100,21 @@ function ca_script_loader_tag( $tag, $handle, $src ) {
 add_filter( 'script_loader_tag', 'ca_script_loader_tag', 10, 3 );
 
 function ca_advent_shortcode( $atts = array(), $content = '' ) {
-    ca_enqueue_shortcode_assets();
+    $atts = shortcode_atts(
+        array(
+            'debug' => '0',
+        ),
+        $atts,
+        'advent_game'
+    );
+
+    $debug_enabled = ca_normalize_bool_shortcode_attr( $atts['debug'], false );
+
+    ca_enqueue_shortcode_assets(
+        array(
+            'debug' => $debug_enabled,
+        )
+    );
 
     ob_start();
     ?>
