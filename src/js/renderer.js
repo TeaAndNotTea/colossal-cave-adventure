@@ -134,6 +134,10 @@ export class AdventRenderer {
 
     this.clearItemLayer();
     const used = Object.create(null);
+    const rowBuckets = [[], [], []];
+    const pillowDef = ITEM_DEFS.find((def) => (def.obj | 0) === 10);
+    const pillowCompositeSlotIndex =
+      pillowDef && typeof pillowDef.startSlot === 'number' ? (pillowDef.startSlot | 0) : 16;
     const cagePlace = this.bridge.getObjectPlace(4);
     const cageFixed = this.bridge.getObjectFixed(4);
     const rodPlace = this.bridge.getObjectPlace(5);
@@ -165,7 +169,7 @@ export class AdventRenderer {
     const renderPillowVaseFromVase = showPillowWithVase && !pillowHere;
 
     if (renderPillowVaseFromVase) {
-      used[0] = true;
+      used[pillowCompositeSlotIndex] = true;
     }
 
     for (const def of ITEM_DEFS) {
@@ -197,10 +201,19 @@ export class AdventRenderer {
       }
 
       const slotIndex =
-        renderPillowVaseFromVase && obj === 58 ? 0 : this.pickSlotIndex(def, loc, used);
+        renderPillowVaseFromVase && obj === 58
+          ? pillowCompositeSlotIndex
+          : this.pickSlotIndex(def, loc, used);
       used[slotIndex] = true;
 
       const slot = ITEM_SLOTS[slotIndex] || ITEM_SLOTS[0];
+      const slotRow =
+        typeof slot.row === 'number' && slot.row >= 0 && slot.row <= 2
+          ? slot.row | 0
+          : Math.max(0, Math.min(2, Math.floor(slotIndex / 8)));
+      const slotScale = typeof slot.scale === 'number' && slot.scale > 0 ? slot.scale : 1;
+      const itemScalePct =
+        typeof def.scalePct === 'number' && def.scalePct > 0 ? def.scalePct : 100;
       const sprite =
         showCageWithBird && obj === 4
           ? 'cage+bird.webp'
@@ -221,13 +234,20 @@ export class AdventRenderer {
       img.style.position = 'absolute';
       img.style.left = `${String(slot.x)}%`;
       img.style.top = `${String(slot.y)}%`;
-      img.style.transform = 'translate(-50%, -50%)';
-      img.style.width = '12%';
+      img.style.transform = 'translate(-50%, -100%)';
+      img.style.width = `${String((12 * slotScale * (itemScalePct / 100)).toFixed(2))}%`;
       img.style.height = 'auto';
       img.style.imageRendering = 'auto';
       img.style.filter = 'drop-shadow(0 2px 3px rgba(0,0,0,0.6))';
+      img.style.zIndex = String(slotRow + 1);
 
-      this.ui.itemLayerEl.appendChild(img);
+      rowBuckets[slotRow].push(img);
+    }
+
+    for (const bucket of rowBuckets) {
+      for (const img of bucket) {
+        this.ui.itemLayerEl.appendChild(img);
+      }
     }
   }
 
