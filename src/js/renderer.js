@@ -30,6 +30,10 @@ export class AdventRenderer {
     this.assetBaseUrl = assetBaseUrl;
     this.state = state;
     this.bridge = null;
+    this.pendingRoomLayersRenderSeq = 0;
+    this.pendingRoomLayersImageEl = null;
+    this.pendingRoomLayersLoadHandler = null;
+    this.pendingRoomLayersErrorHandler = null;
   }
 
   setBridge(bridge) {
@@ -38,11 +42,12 @@ export class AdventRenderer {
 
   setRoomImageByKey(key) {
     if (!this.ui.imageEl || !key || key === this.state.lastImageKey) {
-      return;
+      return false;
     }
     this.state.lastImageKey = key;
     this.ui.imageEl.src = `${this.assetBaseUrl}rooms/${key}.webp`;
     this.ui.imageEl.alt = `Location ${String(key)}`;
+    return true;
   }
 
   updateRoomImage(loc) {
@@ -50,6 +55,93 @@ export class AdventRenderer {
       return;
     }
     this.setRoomImageByKey(String(loc));
+  }
+
+  clearPendingRoomLayersRender() {
+    const imgEl = this.pendingRoomLayersImageEl;
+    if (!imgEl) {
+      return;
+    }
+
+    if (this.pendingRoomLayersLoadHandler) {
+      imgEl.removeEventListener('load', this.pendingRoomLayersLoadHandler);
+    }
+    if (this.pendingRoomLayersErrorHandler) {
+      imgEl.removeEventListener('error', this.pendingRoomLayersErrorHandler);
+    }
+
+    this.pendingRoomLayersImageEl = null;
+    this.pendingRoomLayersLoadHandler = null;
+    this.pendingRoomLayersErrorHandler = null;
+  }
+
+  renderOverlayLayers(loc) {
+    this.renderRoomItems(loc);
+    this.renderDwarves(loc);
+  }
+
+  updateRoomScene(loc, imageKey) {
+    if (typeof loc !== 'number' || loc <= 0) {
+      return;
+    }
+
+    const changed = this.setRoomImageByKey(String(imageKey));
+
+    if (!changed) {
+      if (
+        this.pendingRoomLayersImageEl === this.ui.imageEl &&
+        this.ui.imageEl &&
+        !this.ui.imageEl.complete
+      ) {
+        return;
+      }
+      this.clearPendingRoomLayersRender();
+      this.renderOverlayLayers(loc);
+      return;
+    }
+
+    this.clearItemLayer();
+    this.clearActorLayer();
+
+    const imgEl = this.ui.imageEl;
+    if (!imgEl) {
+      this.renderOverlayLayers(loc);
+      return;
+    }
+
+    this.clearPendingRoomLayersRender();
+
+    const seq = (this.pendingRoomLayersRenderSeq += 1);
+    const finish = () => {
+      if (seq !== this.pendingRoomLayersRenderSeq) {
+        return;
+      }
+      this.clearPendingRoomLayersRender();
+      if (this.state.currentLocation !== loc) {
+        return;
+      }
+      this.renderOverlayLayers(loc);
+    };
+
+    if (imgEl.complete) {
+      finish();
+      return;
+    }
+
+    this.pendingRoomLayersImageEl = imgEl;
+    this.pendingRoomLayersLoadHandler = () => {
+      finish();
+    };
+    this.pendingRoomLayersErrorHandler = () => {
+      finish();
+    };
+
+    imgEl.addEventListener('load', this.pendingRoomLayersLoadHandler);
+    imgEl.addEventListener('error', this.pendingRoomLayersErrorHandler);
+
+    if (imgEl.complete) {
+      finish();
+    }
   }
 
   hashSlot(obj, loc) {
@@ -549,6 +641,7 @@ export class AdventRenderer {
 
   refreshRoomVisuals() {
     if (!this.state.moduleRef || !this.bridge) {
+      this.clearPendingRoomLayersRender();
       this.clearActorLayer();
       return;
     }
@@ -556,12 +649,14 @@ export class AdventRenderer {
     const loc = this.bridge.getCurrentLoc();
     const isDead = this.bridge.getPlayerDead();
     if (isDead === 1) {
+      this.clearPendingRoomLayersRender();
       this.setRoomImageByKey('you+dead');
       this.clearItemLayer();
       this.clearActorLayer();
       return;
     }
     if (typeof loc !== 'number' || loc <= 0) {
+      this.clearPendingRoomLayersRender();
       this.clearActorLayer();
       return;
     }
@@ -576,19 +671,11 @@ export class AdventRenderer {
       lampProp === 1 && (lampPlace === loc || lampPlace === -1);
 
     if (!roomHasLight && !lampIsLightingHere) {
-      this.setRoomImageByKey('dark');
-      this.renderRoomItems(loc);
-      this.renderDwarves(loc);
+      this.updateRoomScene(loc, 'dark');
       return;
     }
 
     const overrideKey = this.handleSpecialLocations(loc);
-    if (overrideKey) {
-      this.setRoomImageByKey(overrideKey);
-    } else {
-      this.updateRoomImage(loc);
-    }
-    this.renderRoomItems(loc);
-    this.renderDwarves(loc);
+    this.updateRoomScene(loc, overrideKey || String(loc));
   }
 }
