@@ -12,6 +12,7 @@ export class AdventUI {
     this.restartBtn = null;
     this.disableDwarvesEl = null;
     this.optionsEl = null;
+    this.pendingViewportAlignRaf = 0;
 
     this.setupDom();
     this.attachLayoutHandlers();
@@ -98,7 +99,12 @@ export class AdventUI {
       return;
     }
     this.inputEl.disabled = false;
-    this.inputEl.focus();
+    try {
+      this.inputEl.focus({ preventScroll: true });
+    } catch (e) {
+      this.inputEl.focus();
+    }
+    this.queueImagePanelTopAlign();
   }
 
   disableInput() {
@@ -113,12 +119,66 @@ export class AdventUI {
     }
   }
 
+  isInputFocused() {
+    return !!this.inputEl && document.activeElement === this.inputEl;
+  }
+
+  alignImagePanelTopToViewport = () => {
+    if (!this.imagePanelEl) {
+      return;
+    }
+
+    const rect = this.imagePanelEl.getBoundingClientRect();
+    const visualViewportTop =
+      window.visualViewport && typeof window.visualViewport.offsetTop === 'number'
+        ? window.visualViewport.offsetTop
+        : 0;
+    const delta = rect.top - visualViewportTop;
+
+    if (Math.abs(delta) < 1) {
+      return;
+    }
+
+    const currentScrollY = window.scrollY || window.pageYOffset || 0;
+    const targetScrollY = Math.max(0, currentScrollY + delta);
+    window.scrollTo(0, targetScrollY);
+  };
+
+  queueImagePanelTopAlign = () => {
+    if (!this.isInputFocused() || this.pendingViewportAlignRaf) {
+      return;
+    }
+
+    this.pendingViewportAlignRaf = window.requestAnimationFrame(() => {
+      this.pendingViewportAlignRaf = 0;
+      if (!this.isInputFocused()) {
+        return;
+      }
+      this.alignImagePanelTopToViewport();
+    });
+  };
+
+  handleInputFocus = () => {
+    this.queueImagePanelTopAlign();
+  };
+
+  handleVisualViewportChange = () => {
+    this.applyLayout();
+    this.queueImagePanelTopAlign();
+  };
+
   applyLayout = () => {
     if (!this.consoleEl || !this.imagePanelEl || !this.formEl) {
       return;
     }
 
-    const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+    const vh =
+      (window.visualViewport && typeof window.visualViewport.height === 'number'
+        ? window.visualViewport.height
+        : 0) ||
+      window.innerHeight ||
+      document.documentElement.clientHeight ||
+      0;
     const imageH = this.imagePanelEl.offsetHeight || 0;
     const optionsH = this.optionsEl ? this.optionsEl.offsetHeight || 0 : 0;
     const formH = this.formEl.offsetHeight || 0;
@@ -139,13 +199,32 @@ export class AdventUI {
     if (this.imageEl) {
       this.imageEl.addEventListener('load', this.applyLayout);
     }
+    if (this.inputEl) {
+      this.inputEl.addEventListener('focus', this.handleInputFocus);
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this.handleVisualViewportChange);
+      window.visualViewport.addEventListener('scroll', this.handleVisualViewportChange);
+    }
     window.requestAnimationFrame(this.applyLayout);
   }
 
   detachLayoutHandlers() {
+    if (this.pendingViewportAlignRaf) {
+      window.cancelAnimationFrame(this.pendingViewportAlignRaf);
+      this.pendingViewportAlignRaf = 0;
+    }
+
     window.removeEventListener('resize', this.applyLayout);
     if (this.imageEl) {
       this.imageEl.removeEventListener('load', this.applyLayout);
+    }
+    if (this.inputEl) {
+      this.inputEl.removeEventListener('focus', this.handleInputFocus);
+    }
+    if (window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.handleVisualViewportChange);
+      window.visualViewport.removeEventListener('scroll', this.handleVisualViewportChange);
     }
   }
 }
