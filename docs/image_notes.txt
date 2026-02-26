@@ -43,3 +43,5 @@ DONE    image adjust: change 130 base image to remove RHS rear wall details and 
 BUG: Opening the clam makes it disappear. This is incorrect, it should remain until collected.
 
 BUG: The pirate is visible  in bedquilt after dropping the the second lot of treasure. There was no message and he is everywhere after this.
+
+NOTE: before deploying don't forget to disable :spawn and :warp command processor.

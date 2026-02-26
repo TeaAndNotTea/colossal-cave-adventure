@@ -129,16 +129,64 @@ const runGame = async (root) => {
   }
 };
 
-const startAdventure = () => {
-  const root =
-    document.querySelector('[data-advent-root]') || document.getElementById('advent-root');
+const LEGACY_ROOT_ID = 'advent-root';
+const ROOT_SELECTOR = '[data-advent-root]';
 
-  if (!root) {
-    console.error('Colossal Adventure: no advent root element found');
+const findRoot = () => {
+  const root = document.querySelector(ROOT_SELECTOR);
+  if (root) {
+    return root;
+  }
+
+  return document.getElementById(LEGACY_ROOT_ID);
+};
+
+const startRoot = (root) => {
+  if (!root || root.dataset.adventStarted === '1') {
     return;
   }
 
+  root.dataset.adventStarted = '1';
   void runGame(root);
+};
+
+const observeAndStartRoot = (root) => {
+  if (!root) {
+    return;
+  }
+
+  if (typeof IntersectionObserver !== 'function') {
+    startRoot(root);
+    return;
+  }
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) {
+          continue;
+        }
+
+        observer.unobserve(entry.target);
+        startRoot(entry.target);
+      }
+    },
+    {
+      rootMargin: '300px 0px',
+      threshold: 0.01,
+    }
+  );
+
+  observer.observe(root);
+};
+
+const startAdventure = () => {
+  const root = findRoot();
+  if (!root) {
+    return;
+  }
+
+  observeAndStartRoot(root);
 };
 
 installGlobalExitHandler();

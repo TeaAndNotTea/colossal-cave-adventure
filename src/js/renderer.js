@@ -18,6 +18,7 @@ const SPECIAL_OBJECTS = {
   dragon: 31,
   door: 9,
   clam: 14,
+  oyster: 15,
   troll: 33,
   bear: 35,
   chain: 64,
@@ -143,6 +144,8 @@ export class AdventRenderer {
     const rodPlace = this.bridge.getObjectPlace(5);
     const pillowPlace = this.bridge.getObjectPlace(10);
     const pillowFixed = this.bridge.getObjectFixed(10);
+    const oysterPlace = this.bridge.getObjectPlace(SPECIAL_OBJECTS.oyster);
+    const oysterFixed = this.bridge.getObjectFixed(SPECIAL_OBJECTS.oyster);
     const birdPlace = this.bridge.getObjectPlace(8);
     const birdFixed = this.bridge.getObjectFixed(8);
     const birdProp = this.bridge.getObjectProp(8);
@@ -193,9 +196,17 @@ export class AdventRenderer {
         }
       }
 
-      const place = this.bridge.getObjectPlace(obj);
-      const fixed = this.bridge.getObjectFixed(obj);
-      const here = place === loc || fixed === loc;
+      let place = this.bridge.getObjectPlace(obj);
+      let fixed = this.bridge.getObjectFixed(obj);
+      let here = place === loc || fixed === loc;
+      if (obj === SPECIAL_OBJECTS.clam && !here) {
+        const oysterHere = oysterPlace === loc || oysterFixed === loc;
+        if (oysterHere) {
+          place = oysterPlace;
+          fixed = oysterFixed;
+          here = true;
+        }
+      }
       if (!here) {
         continue;
       }
