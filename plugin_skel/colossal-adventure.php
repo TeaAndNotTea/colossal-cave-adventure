@@ -3,7 +3,7 @@
  * Plugin Name: Colossal Adventure (WASM)
  * Description: Classic Colossal Cave Adventure via WebAssembly. Use [advent_game].
  * Version:     1.0.0
- * Author:      Dave Rowntree
+ * Author:      Geekmaster General
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

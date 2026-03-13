@@ -4,6 +4,43 @@ const BOTTOM_THIRD_TOP = 100 * (2 / 3);
 const BOTTOM_THIRD_HEIGHT = 100 / 3;
 const ITEM_ROW_SCALES = [0.82, 1, 1.12];
 
+// Screen-space anchor points for actors rendered into the room overlay.
+// The renderer currently uses these as a fixed left-to-right staging row for
+// dwarves and any other "actor" sprites that are not tied to room geometry.
+// These are data rather than logic so the layout can be tuned without digging
+// through renderer behavior.
+export const ACTOR_SLOTS = [
+  { x: 10, y: 82 },
+  { x: 30, y: 82 },
+  { x: 50, y: 82 },
+  { x: 70, y: 82 },
+  { x: 90, y: 82 },
+];
+
+// Canonical object ids for rooms and overlays that have special-case visual
+// behavior. These ids come from the original adventure object table exposed
+// through the WASM bridge, and the renderer needs stable symbolic names for
+// them because state-dependent artwork is keyed off object prop/place/fixed
+// values rather than generic item definitions.
+export const SPECIAL_OBJECTS = {
+  lamp: 2,
+  grate: 3,
+  chasm: 32,
+  fissur: 12,
+  plant: 24,
+  snake: 11,
+  dragon: 31,
+  door: 9,
+  clam: 14,
+  oyster: 15,
+  troll: 33,
+  bear: 35,
+  chain: 64,
+};
+
+// Inventory slot positions expressed in percentages of the overlay area.
+// This is generated from a simple 8x3 grid so item placement stays consistent
+// and can be scaled by row to fake a little depth in the lower third of the UI.
 export const ITEM_SLOTS = Array.from({ length: ITEM_SLOT_COLS * ITEM_SLOT_ROWS }, (_, idx) => {
   const row = Math.floor(idx / ITEM_SLOT_COLS);
   const col = idx % ITEM_SLOT_COLS;
@@ -18,6 +55,12 @@ export const ITEM_SLOTS = Array.from({ length: ITEM_SLOT_COLS * ITEM_SLOT_ROWS }
   };
 });
 
+// Visual metadata for concrete inventory/world objects that currently have
+// bespoke sprites. `obj` is the canonical game object id; `startLoc` and
+// `startSlot` seed the initial presentation before live state is read from the
+// engine; `scalePct` compensates for source art that was authored at different
+// apparent sizes. Objects omitted here fall back to text-only behavior or have
+// not been given custom artwork yet.
 export const ITEM_DEFS = [
   { obj: 1, sprite: 'keys.webp', startLoc: 3, startSlot: 19, scalePct: 50 },
   { obj: 2, sprite: 'lamp.webp', startLoc: 3, startSlot: 23, scalePct: 100 },

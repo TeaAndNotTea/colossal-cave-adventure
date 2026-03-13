@@ -1,4 +1,9 @@
 export class AdventBridge {
+  // Creates the JS-side integration layer that sits between the Emscripten
+  // module, the DOM-oriented UI helper, and the renderer. This class owns the
+  // mutable references to exported WASM functions because those exports may not
+  // exist until after the module finishes loading, and some are optional based
+  // on which C helpers were compiled into the current build.
   constructor({ ui, renderer, assetBaseUrl, state, debugEnabled = false }) {
     this.ui = ui;
     this.renderer = renderer;
@@ -25,10 +30,16 @@ export class AdventBridge {
     this.installInputBridge();
   }
 
+  // Reports whether the current module exposes object placement queries. The
+  // renderer uses this as a capability check before attempting item overlays
+  // that depend on live object locations rather than static room artwork.
   hasObjectLocationAccess() {
     return typeof this.exports.getObjPlaceFn === 'function';
   }
 
+  // Reports whether both moveable-object and fixed-location accessors exist.
+  // Some renderer paths need both because Adventure objects can be present
+  // either as moveable items (`place`) or as fixed scenery (`fixed`).
   hasPlaceAndFixedAccess() {
     return (
       typeof this.exports.getObjPlaceFn === 'function' &&
@@ -36,6 +47,9 @@ export class AdventBridge {
     );
   }
 
+  // Safe wrapper around the engine's current-location accessor. The bridge
+  // normalizes a missing export or thrown WASM exception into `0`, which the
+  // rest of the frontend already treats as "no valid location available yet".
   getCurrentLoc() {
     if (!this.exports.getLocFn) {
       return 0;
@@ -48,6 +62,10 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper for per-object `prop` state, which the original game uses for
+  // many binary or staged object conditions such as open/closed, alive/dead, or
+  // plant growth. Returning `null` on failure lets renderer callers distinguish
+  // "export unavailable" from real numeric prop values.
   getObjectProp(objNum) {
     if (!this.exports.getObjPropFn) {
       return null;
@@ -60,6 +78,9 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper for the location condition bitfield. The renderer mainly uses
+  // this for darkness/light checks, but the bridge keeps the raw numeric value
+  // because other frontend features may eventually need additional condition bits.
   getLocationCond(locNum) {
     if (!this.exports.getLocCondFn) {
       return null;
@@ -72,6 +93,9 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper for the engine's "player dead" flag. This is isolated here so
+  // death-screen logic does not need to know whether the underlying WASM export
+  // came from `cwrap`, a raw underscore export, or failed entirely.
   getPlayerDead() {
     if (!this.exports.getPlayerDeadFn) {
       return null;
@@ -84,6 +108,9 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper for the dwarf activation flag. In the original game this flag
+  // controls whether dwarves are still dormant, active, or otherwise engaged,
+  // and the renderer only wants to draw dwarf overlays once they are relevant.
   getDwarfFlag() {
     if (!this.exports.getDwarfFlagFn) {
       return null;
@@ -96,6 +123,9 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper returning the current location for a specific dwarf slot. The
+  // game tracks dwarves as numbered entities, so the renderer queries each one
+  // independently when deciding which dwarf sprites belong in the current room.
   getDwarfLocation(which) {
     if (!this.exports.getDwarfLocationFn) {
       return null;
@@ -108,6 +138,9 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper around the bird-disturbed helper. This exposes a piece of game
+  // state that is awkward to infer from generic object tables alone, so the JS
+  // renderer can choose the correct bird artwork without duplicating C logic.
   getBirdDisturbed() {
     if (!this.exports.getBirdDisturbedFn) {
       return null;
@@ -120,6 +153,10 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper returning the main `place` value for an object. The bridge
+  // preserves the engine's numeric conventions, including `-1` for carried
+  // inventory items, so higher-level code can make precise Adventure-specific
+  // decisions about visibility and ownership.
   getObjectPlace(objNum) {
     if (!this.exports.getObjPlaceFn) {
       return null;
@@ -132,6 +169,9 @@ export class AdventBridge {
     }
   }
 
+  // Safe wrapper returning the `fixed` location for an object, used for scenery
+  // instances that are attached to a room independent of the moveable object
+  // table. Renderer code combines this with `getObjectPlace` for full coverage.
   getObjectFixed(objNum) {
     if (!this.exports.getObjFixedFn) {
       return null;
@@ -144,6 +184,10 @@ export class AdventBridge {
     }
   }
 
+  // Debug-only helper that asks the engine to move the player directly to a new
+  // location. The bridge converts the native return code into a structured JS
+  // result object so UI/debug code does not need to know the C-side sentinel
+  // conventions, and refreshes visuals immediately on success.
   tryWarpToLocation(newLoc) {
     if (!this.exports.setLocFn) {
       return { ok: false, code: 'no-export' };
@@ -173,6 +217,10 @@ export class AdventBridge {
     return { ok: true, loc: rc | 0 };
   }
 
+  // Debug helper for injecting mobile NPCs into the current room. The engine
+  // exposes separate helpers for pirate, one dwarf, or all dwarves, so this
+  // method centralizes the command decoding and normalizes success/failure into
+  // one result shape for the debug command handler.
   trySpawn(kind, which) {
     const k = String(kind || '').toLowerCase();
 
@@ -221,6 +269,10 @@ export class AdventBridge {
     return { ok: false, code: 'unknown' };
   }
 
+  // Consumes the pending input resolver installed by `awaitInputFromDom`. This
+  // is the handoff point between the engine's async "wait for a command" cycle
+  // and the DOM form handler, and it always disables the input field so the UI
+  // reflects that the game is no longer waiting for keyboard input.
   consumePendingResolve() {
     const resolve = this.state.pendingResolve;
     this.state.pendingResolve = null;
@@ -228,6 +280,10 @@ export class AdventBridge {
     return resolve;
   }
 
+  // Parses and services frontend-only debug commands before normal game input
+  // reaches the engine. These commands exist entirely on the JS side, so when a
+  // match succeeds this method resolves the pending input promise itself rather
+  // than forwarding the original text into the Adventure parser.
   handleDebugCommand(value) {
     if (!this.debugEnabled) {
       return false;
@@ -285,6 +341,11 @@ export class AdventBridge {
     return false;
   }
 
+  // Form submit handler that turns user-entered text into the next line of game
+  // input. It guards against stray submits when the engine is not currently
+  // blocked on input, strips newlines to preserve the single-command model, and
+  // routes debug commands through the JS-side handler before resolving gameplay
+  // input back to the WASM core.
   handleFormSubmit(ev) {
     ev.preventDefault();
     if (!this.state.pendingResolve || !this.state.gameActive) {
@@ -303,6 +364,10 @@ export class AdventBridge {
     resolve(value);
   }
 
+  // Installs the global async function that the Emscripten-facing glue calls
+  // whenever the C game wants another command from the player. This is the key
+  // inversion point in the architecture: the WASM side awaits a promise, while
+  // the DOM side later resolves that promise from `handleFormSubmit`.
   installInputBridge() {
     window.awaitInputFromDom = async () => {
       if (!this.state.gameActive) {
@@ -318,6 +383,10 @@ export class AdventBridge {
     };
   }
 
+  // Builds the Emscripten Module configuration used at load time. `locateFile`
+  // and `filePackagePrefixURL` make generated `.wasm` and `.data` assets resolve
+  // relative to the chosen asset base, while `print` and `printErr` funnel game
+  // output into the UI and trigger visual refreshes after each emitted line.
   createModuleConfig() {
     return {
       locateFile: (path) => {
@@ -342,6 +411,11 @@ export class AdventBridge {
     };
   }
 
+  // Discovers the core engine exports needed for room tracking, death state,
+  // debug movement/spawn helpers, and other high-level game queries. It first
+  // prefers `cwrap` for ergonomic typed wrappers, then falls back to raw `_foo`
+  // exports when necessary so the frontend remains compatible with multiple
+  // Emscripten build shapes.
   initCoreAccessors(ModuleInstance) {
     if (typeof ModuleInstance.cwrap === 'function') {
       try {
@@ -467,6 +541,10 @@ export class AdventBridge {
     return true;
   }
 
+  // Discovers object-table accessors used by the renderer's stateful artwork and
+  // dynamic item placement logic. These are optional at runtime, so the bridge
+  // records whichever variants are available and emits warnings instead of hard
+  // failing when a reduced build omits them.
   initObjectAccessors(ModuleInstance) {
     if (typeof ModuleInstance.cwrap === 'function') {
       try {
@@ -503,6 +581,9 @@ export class AdventBridge {
     }
   }
 
+  // Wires the "disable dwarves" UI option to the corresponding WASM export and
+  // persists the selected value in local storage. This keeps the checkbox, the
+  // native game flag, and future page loads in sync from one integration point.
   bindDwarfToggle(ModuleInstance) {
     let setDisableFn = null;
 
@@ -552,6 +633,10 @@ export class AdventBridge {
     }
   }
 
+  // Starts a lightweight animation-frame poller that watches for room changes on
+  // the WASM side. The Adventure core can change location as a side effect of
+  // commands without explicitly notifying JS, so this watcher is the mechanism
+  // that keeps the renderer synchronized with movement initiated inside the game.
   startLocationWatcher() {
     let lastLoc = null;
 
@@ -583,6 +668,11 @@ export class AdventBridge {
     window.requestAnimationFrame(tick);
   }
 
+  // Finalizes attachment of a loaded Emscripten module to the frontend. This is
+  // the bridge's main bootstrapping entry point: it stores the module ref,
+  // resolves whatever exports are available, binds option toggles, starts the
+  // location watcher if possible, reapplies layout, and performs an initial
+  // render so the UI reflects the loaded game state immediately.
   attachModule(ModuleInstance) {
     this.state.moduleRef = ModuleInstance;
 

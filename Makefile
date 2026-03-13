@@ -22,9 +22,12 @@ ITEM_IMG_SRC	:= assets/items
 SKEL        	:= plugin_skel
 
 # Remote dev server + docker/wp settings
-REMOTE_HOST 		:= dave@192.168.1.202
-REMOTE_PLUGINS_DIR 	:= /home/dave/docker/wp-data/wp-content/plugins
-WP_CONTAINER 		:= docker-wordpress-1
+#REMOTE_HOST 		:= dave@192.168.1.202
+REMOTE_HOST 		:= node5@192.168.1.226
+#REMOTE_PLUGINS_DIR 	:= /home/dave/docker/wp-data/wp-content/plugins
+REMOTE_PLUGINS_DIR 	:= /media/disk0/wordpress/www/wp-content/plugins
+#WP_CONTAINER 		:= docker-wordpress-1
+WP_CONTAINER 		:= wp_app
 WP_PATH 			:= /var/www/html
 
 # Source files compiled into WASM

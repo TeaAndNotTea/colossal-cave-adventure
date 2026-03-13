@@ -1,30 +1,14 @@
-import { ITEM_DEFS, ITEM_SLOTS } from './config.js';
+import { ACTOR_SLOTS, ITEM_DEFS, ITEM_SLOTS, SPECIAL_OBJECTS } from './config.js';
 
-const ACTOR_SLOTS = [
-  { x: 10, y: 82 },
-  { x: 30, y: 82 },
-  { x: 50, y: 82 },
-  { x: 70, y: 82 },
-  { x: 90, y: 82 },
-];
-
-const SPECIAL_OBJECTS = {
-  lamp: 2,
-  grate: 3,
-  chasm: 32,
-  fissur: 12,
-  plant: 24,
-  snake: 11,
-  dragon: 31,
-  door: 9,
-  clam: 14,
-  oyster: 15,
-  troll: 33,
-  bear: 35,
-  chain: 64,
-};
-
+// The renderer is the thin visual layer between the DOM and the WASM bridge.
+// It does not own gameplay state; instead it reads current object/location
+// values from the bridge, chooses the correct room image variant, and rebuilds
+// overlay layers for items and actors whenever the scene changes.
 export class AdventRenderer {
+  // Captures the DOM handles, shared mutable UI state, and asset base path that
+  // every later render step depends on. The pending-room fields are bookkeeping
+  // for asynchronous image loading so a stale room load cannot repaint overlays
+  // after the player has already moved somewhere else.
   constructor({ ui, assetBaseUrl, state }) {
     this.ui = ui;
     this.assetBaseUrl = assetBaseUrl;
@@ -36,10 +20,16 @@ export class AdventRenderer {
     this.pendingRoomLayersErrorHandler = null;
   }
 
+  // Installs the bridge object that exposes live engine state from the WASM
+  // side. The renderer is deliberately inert until this is provided so tests or
+  // early boot code can construct it before the module is fully ready.
   setBridge(bridge) {
     this.bridge = bridge;
   }
 
+  // Switches the base room image if the requested asset key differs from the
+  // one already displayed. Returning a boolean lets callers distinguish between
+  // "room art actually changed" and "same art, only overlays may need refresh".
   setRoomImageByKey(key) {
     if (!this.ui.imageEl || !key || key === this.state.lastImageKey) {
       return false;
@@ -50,6 +40,9 @@ export class AdventRenderer {
     return true;
   }
 
+  // Convenience wrapper for the common case where the room art is keyed exactly
+  // by numeric location id. This keeps callers from repeating the number-to-
+  // string conversion and centralizes the validity check for room locations.
   updateRoomImage(loc) {
     if (typeof loc !== 'number' || loc <= 0) {
       return;
@@ -57,6 +50,9 @@ export class AdventRenderer {
     this.setRoomImageByKey(String(loc));
   }
 
+  // Removes any outstanding image load/error listeners registered by a prior
+  // `updateRoomScene` call. This prevents duplicate overlay renders and avoids
+  // handlers firing after the renderer has moved on to a newer room image.
   clearPendingRoomLayersRender() {
     const imgEl = this.pendingRoomLayersImageEl;
     if (!imgEl) {
@@ -75,11 +71,17 @@ export class AdventRenderer {
     this.pendingRoomLayersErrorHandler = null;
   }
 
+  // Rebuilds both dynamic overlay layers for the current room. Keeping this in
+  // one helper makes it easy to trigger item and actor rendering together once
+  // the background image is known to be in a stable state.
   renderOverlayLayers(loc) {
     this.renderRoomItems(loc);
     this.renderDwarves(loc);
   }
 
+  // Room backgrounds load asynchronously. When the room image changes we defer
+  // overlay rendering until the new image has either loaded or failed, so item
+  // and actor sprites stay visually in sync with the backdrop the player sees.
   updateRoomScene(loc, imageKey) {
     if (typeof loc !== 'number' || loc <= 0) {
       return;
@@ -144,6 +146,9 @@ export class AdventRenderer {
     }
   }
 
+  // Produces a deterministic pseudo-random integer from an object/seed and
+  // location. The renderer uses this to spread sprites across available slots
+  // without introducing frame-to-frame jitter for the same room state.
   hashSlot(obj, loc) {
     let x = ((obj | 0) * 1103515245 + (loc | 0) * 12345) | 0;
     x ^= x >>> 16;
@@ -153,6 +158,10 @@ export class AdventRenderer {
     return x;
   }
 
+  // Chooses an inventory-layer slot for a rendered object. It first honors a
+  // configured starting slot when the object is in its canonical starting room,
+  // then falls back to a deterministic hashed placement with linear probing so
+  // multiple items can coexist without overlapping the same slot.
   pickSlotIndex(def, loc, alreadyUsed) {
     const preferred =
       def &&
@@ -185,6 +194,10 @@ export class AdventRenderer {
     return h;
   }
 
+  // Clears all currently rendered item sprites from the item overlay layer.
+  // This class always rebuilds the layer from scratch because item visibility
+  // depends on many pieces of bridge state and diffing would add complexity for
+  // little practical benefit at this scale.
   clearItemLayer() {
     if (!this.ui.itemLayerEl) {
       return;
@@ -194,6 +207,9 @@ export class AdventRenderer {
     }
   }
 
+  // Clears all actor overlays such as dwarves and the bear-peeping flourish.
+  // Items and actors live on separate DOM layers so each can be refreshed
+  // independently when the surrounding control flow needs that separation.
   clearActorLayer() {
     if (!this.ui.actorLayerEl) {
       return;
@@ -203,6 +219,9 @@ export class AdventRenderer {
     }
   }
 
+  // Chooses a deterministic slot for actor-style overlays. This mirrors item
+  // placement logic but uses the smaller fixed actor staging row instead of the
+  // inventory grid because actors are positioned as scene characters, not props.
   pickActorSlotIndex(seed, loc, alreadyUsed) {
     const n = ACTOR_SLOTS.length;
     if (n <= 0) {
@@ -220,6 +239,11 @@ export class AdventRenderer {
     return h;
   }
 
+  // Reconstructs the room's item overlay from current game state. This method
+  // combines static art metadata from `ITEM_DEFS` with live object placement
+  // and prop values from the bridge so it can decide which objects are present,
+  // which composite sprites should replace them, and where each visible sprite
+  // should sit in the lower overlay area.
   renderRoomItems(loc) {
     if (!this.ui.itemLayerEl || !this.bridge || !this.bridge.hasObjectLocationAccess()) {
       return;
@@ -228,6 +252,9 @@ export class AdventRenderer {
     this.clearItemLayer();
     const used = Object.create(null);
     const rowBuckets = [[], [], []];
+    // A few objects need composite or state-sensitive artwork that cannot be
+    // expressed by the base item table alone, so we gather the bridge state up
+    // front and decide those variants before walking ITEM_DEFS.
     const pillowDef = ITEM_DEFS.find((def) => (def.obj | 0) === 10);
     const pillowCompositeSlotIndex =
       pillowDef && typeof pillowDef.startSlot === 'number' ? (pillowDef.startSlot | 0) : 16;
@@ -267,6 +294,10 @@ export class AdventRenderer {
       used[pillowCompositeSlotIndex] = true;
     }
 
+    // ITEM_DEFS defines which concrete objects have art. We still decide at
+    // render time whether each object is present here, whether it should be
+    // suppressed in favor of a composite sprite, and which fallback slot it
+    // should occupy if its preferred slot is already taken.
     for (const def of ITEM_DEFS) {
       const obj = def.obj | 0;
       if (obj <= 0) {
@@ -347,6 +378,8 @@ export class AdventRenderer {
       rowBuckets[slotRow].push(img);
     }
 
+    // Append back-to-front by row so lower rows naturally paint over upper rows
+    // without needing a separate sort pass for every individual sprite.
     for (const bucket of rowBuckets) {
       for (const img of bucket) {
         this.ui.itemLayerEl.appendChild(img);
@@ -354,6 +387,10 @@ export class AdventRenderer {
     }
   }
 
+  // Rebuilds actor overlays for hostile NPCs in the current room. Right now
+  // that primarily means dwarves, which are rendered separately from items so
+  // their placement and styling can follow scene-character rules instead of the
+  // inventory/item grid logic.
   renderDwarves(loc) {
     if (!this.ui.actorLayerEl || !this.bridge) {
       return;
@@ -364,6 +401,9 @@ export class AdventRenderer {
     const dflag = this.bridge.getDwarfFlag();
     const used = Object.create(null);
 
+    // The original game tracks up to five dwarves independently. We render only
+    // the ones currently in this room, placing them into deterministic actor
+    // slots so they do not jump around between refreshes.
     if (typeof dflag === 'number' && dflag >= 2) {
       for (let which = 1; which <= 5; which += 1) {
         const dloc = this.bridge.getDwarfLocation(which);
@@ -394,6 +434,9 @@ export class AdventRenderer {
     this.renderBearPeepingOverlay();
   }
 
+  // This is a UI-only flourish: once the bear has been carried off-stage we
+  // still show a "peeping" overlay in inventory/actor space to match the art
+  // direction used elsewhere in the frontend.
   renderBearPeepingOverlay() {
     if (!this.ui.actorLayerEl || !this.bridge || !this.bridge.hasObjectLocationAccess()) {
       return;
@@ -420,11 +463,18 @@ export class AdventRenderer {
     this.ui.actorLayerEl.appendChild(img);
   }
 
+  // Maps a live game location to a room art key when the default `${loc}.webp`
+  // rule is not sufficient. This exists because several rooms have stateful
+  // backgrounds driven by object props, and some groups of rooms intentionally
+  // share a single visual asset even though the underlying location ids differ.
   handleSpecialLocations(loc) {
     if (!this.bridge) {
       return null;
     }
 
+    // Most rooms map directly to `${loc}.webp`. This switch handles the rooms
+    // whose backdrop depends on live object state, plus groups of locations that
+    // intentionally share a single image asset.
     switch (loc) {
       case 8: {
         const grateProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.grate);
@@ -639,6 +689,11 @@ export class AdventRenderer {
     }
   }
 
+  // Entry point used by the rest of the frontend to synchronize the visible
+  // scene with the current engine state. It handles terminal states like death,
+  // validates the current location, applies darkness rules, resolves any room
+  // art overrides, and then delegates to `updateRoomScene` for the actual image
+  // swap and overlay refresh sequencing.
   refreshRoomVisuals() {
     if (!this.state.moduleRef || !this.bridge) {
       this.clearPendingRoomLayersRender();
@@ -663,6 +718,9 @@ export class AdventRenderer {
 
     this.state.currentLocation = loc;
 
+    // Darkness is handled before room-specific overrides because it replaces
+    // the entire scene regardless of which nominal room art would otherwise be
+    // selected.
     const lampProp = this.bridge.getObjectProp(SPECIAL_OBJECTS.lamp);
     const locCond = this.bridge.getLocationCond(loc);
     const lampPlace = this.bridge.getObjectPlace(SPECIAL_OBJECTS.lamp);
