@@ -661,6 +661,12 @@ export class AdventRenderer {
       case 87:
       case 107:
       case 131:
+      case 132:
+      case 133:
+      case 134:
+      case 135:
+      case 136:
+      case 137:
       case 138:
       case 139:
         return '42';
