@@ -1,7 +1,8 @@
 # Colossal Cave Adventure Web edition with graphics
 This project is the result of exploration using LLM coding tools to convert the original text adventure game from its DEC PDP-10 origins to run within a modern web browser, retaining all the original quirks. Just for fun I added graphics that track the scene, again created with AI tools (mostly because I suck at drawing.)
 
-# WEBSITE LINK <---ADD ME WHEN LIVE
+## Blog link
+To read more in detail and play the game [check out the blog entry](https://teaandnottea.com/2026/03/18/making-of-colossal-cave-adventure-web-assembly-and-graphics/). There is also a [fixed page with just the game](https://teaandnottea.com/colossal-cave-adventure/) and a few hints and a map.
 
 ## Related Repositories
 # LINK to wizard code calculator when live
