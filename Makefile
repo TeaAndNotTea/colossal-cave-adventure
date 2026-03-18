@@ -22,12 +22,10 @@ ITEM_IMG_SRC	:= assets/items
 SKEL        	:= plugin_skel
 
 # Remote dev server + docker/wp settings
-#REMOTE_HOST 		:= dave@192.168.1.202
-REMOTE_HOST 		:= node5@192.168.1.226
-#REMOTE_PLUGINS_DIR 	:= /home/dave/docker/wp-data/wp-content/plugins
+REMOTE_HOST 		:= user@hostname
+# Path to plugins directory on host (for my dev container, my WP data is mapped to host disk for ease of access)
 REMOTE_PLUGINS_DIR 	:= /media/disk0/wordpress/www/wp-content/plugins
-#WP_CONTAINER 		:= docker-wordpress-1
-WP_CONTAINER 		:= wp_app
+WP_CONTAINER 		:= docker-wordpress-1
 WP_PATH 			:= /var/www/html
 
 # Source files compiled into WASM
@@ -38,16 +36,16 @@ WASM_SRCS := \
 	$(SRC_C)/timewrap.c \
 	$(SRC_C)/main_stub.c
 
-# Emscripten build flags
-EMCC_FLAGS := -O2 \
-  --preload-file $(CURDIR)/advent/advent.dat@/advent.dat \
-  -I./src/libf2c $(LIB_C)/libf2c.a \
-  -sMODULARIZE=1 \
-  -sEXPORT_NAME='createAdventModule' \
-  -sASYNCIFY \
-  -sASYNCIFY_IMPORTS='["get_js_input"]' \
-  -sFORCE_FILESYSTEM=1 \
-  --js-library $(SRC_JS)/library_getin.js
+	# Emscripten build flags
+	EMCC_FLAGS := -O2 \
+	--preload-file $(CURDIR)/advent/advent.dat@/advent.dat \
+	-I./src/libf2c $(LIB_C)/libf2c.a \
+	-sMODULARIZE=1 \
+	-sEXPORT_NAME='createAdventModule' \
+	-sASYNCIFY \
+	-sASYNCIFY_IMPORTS='["get_js_input"]' \
+	-sFORCE_FILESYSTEM=1 \
+	--js-library $(SRC_JS)/library_getin.js
 
 .PHONY: all clean wasm images assemble zip deploy
 
