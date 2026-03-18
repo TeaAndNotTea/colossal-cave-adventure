@@ -32,9 +32,9 @@ to build a wordpress plugin file that can be uploaded to a server. The target do
 
 ## Development
 advent/         Original Nelson-era Adventure data file (350 point version)<br>
-assets/         Graphic assets for background images and item/treasure/actors
-docs/           Random documents, images and notes
-lib_c/          
+assets/         Graphic assets for background images and item/treasure/actors<br>
+docs/           Random documents, images and notes<br>
+lib_c/          <br>
 plugin_skel/    Title image and PHP source<br>
 src/            Source code (C and JS)
 
