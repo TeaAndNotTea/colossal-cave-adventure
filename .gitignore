@@ -3,7 +3,9 @@
 /dist/
 /dist.old/
 
-.codex/state
+.codex/*
+!.codex/config.toml
+!.codex/AGENTS.md
 
 package.json
 package-lock.json
