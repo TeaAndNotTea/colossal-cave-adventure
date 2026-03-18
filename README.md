@@ -3,6 +3,10 @@ This project is the result of exploration using LLM coding tools to convert the 
 
 # WEBSITE LINK <---ADD ME WHEN LIVE
 
+## Related Repositories
+# LINK to wizard code calculator when live
+
+
 ## Overview
 The F2C and image generation are completed. This repository takes the resulting C code, cross compiles to WebAssembly(WASM) which is loaded with a JavaScript wrapper. Additional code handles user interface and graphics. Once issue may be using the provided WASM version of a cut-down libf2c. If this causes an issue, contact me and I will expand the repository to add this part of the flow.
 
